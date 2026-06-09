@@ -10,7 +10,7 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 16) {
                 header
                 nextShiftCard
-                if let me = vm.me {
+                if let me = vm.me, !me.locations.isEmpty {
                     Text("Locaties: \(me.locations.map(\.name).joined(separator: ", "))")
                         .foregroundStyle(.secondary)
                 }
@@ -62,7 +62,11 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Volgende dienst").font(.caption).foregroundStyle(.secondary)
                     Text(shift.shiftName ?? "Dienst").font(.headline)
-                    Text("\(shift.workDate) • \(shift.startTime?.hhmm ?? "") - \(shift.endTime?.hhmm ?? "")")
+                    if let start = shift.startTime, let end = shift.endTime {
+                        Text("\(shift.workDate) • \(start.hhmm) - \(end.hhmm)")
+                    } else {
+                        Text(shift.workDate)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()

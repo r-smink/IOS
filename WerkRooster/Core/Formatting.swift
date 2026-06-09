@@ -6,6 +6,19 @@ extension String {
         if count >= 5 { return String(prefix(5)) }
         return self
     }
+
+    var formattedNotificationDate: String {
+        let input = DateFormatter()
+        input.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        if let date = input.date(from: self) {
+            let output = DateFormatter()
+            output.locale = Locale(identifier: "nl_NL")
+            output.dateStyle = .medium
+            output.timeStyle = .short
+            return output.string(from: date)
+        }
+        return self
+    }
 }
 
 extension Date {

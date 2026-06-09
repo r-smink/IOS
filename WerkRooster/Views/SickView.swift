@@ -28,6 +28,12 @@ struct SickView: View {
             .buttonStyle(.borderedProminent)
             .disabled(vm.loading)
 
+            if let status = vm.availabilityStatus, status.contains("Ziekmelding") {
+                Text(status)
+                    .font(.footnote)
+                    .foregroundStyle(.green)
+            }
+
             Spacer()
         }
         .padding()

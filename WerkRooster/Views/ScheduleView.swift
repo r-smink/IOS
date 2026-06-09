@@ -38,6 +38,11 @@ struct ScheduleView: View {
                     Task { await vm.loadSchedules(start: start, end: end) }
                 }
                 ScheduleCalendar(monthDate: monthDate, schedules: vm.schedules)
+                    .task {
+                        let start = monthDate.startOfMonth.isoDate
+                        let end = monthDate.endOfMonth.isoDate
+                        await vm.loadSchedules(start: start, end: end)
+                    }
             }
         }
         .padding(.horizontal)
@@ -52,9 +57,8 @@ private struct ScheduleCard: View {
             Text(item.shiftName ?? "Dienst").font(.headline)
             Text(item.locationName ?? "").font(.subheadline)
             Text(item.workDate).font(.caption)
-            let range = "\(item.startTime?.hhmm ?? "") - \(item.endTime?.hhmm ?? "")"
-            if !range.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text(range).foregroundStyle(.blue)
+            if let start = item.startTime, let end = item.endTime {
+                Text("\(start.hhmm) - \(end.hhmm)").foregroundStyle(.blue)
             }
             if let notes = item.notes, !notes.isEmpty {
                 Text(notes).font(.caption).foregroundStyle(.secondary)

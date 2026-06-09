@@ -17,12 +17,15 @@ struct LoginView: View {
                 .textFieldStyle(.roundedBorder)
             SecureField("Wachtwoord", text: $password)
                 .textFieldStyle(.roundedBorder)
+                .onSubmit {
+                    Task { await vm.login(username: username, password: password) }
+                }
 
             Button(vm.loading ? "Inloggen..." : "Inloggen") {
                 Task { await vm.login(username: username, password: password) }
             }
             .buttonStyle(.borderedProminent)
-            .disabled(vm.loading)
+            .disabled(vm.loading || username.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty)
             .frame(maxWidth: .infinity, alignment: .center)
 
             if let error = vm.error {

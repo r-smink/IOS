@@ -134,6 +134,40 @@ struct AvailabilityEntryRequest: Codable, Identifiable, Hashable {
     var customStart: String?
     var customEnd: String?
     var notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case date, isAvailable, shiftPreference, customStart, customEnd, notes
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(date, forKey: .date)
+        try container.encode(isAvailable ? 1 : 0, forKey: .isAvailable)
+        try container.encodeIfPresent(shiftPreference, forKey: .shiftPreference)
+        try container.encodeIfPresent(customStart, forKey: .customStart)
+        try container.encodeIfPresent(customEnd, forKey: .customEnd)
+        try container.encodeIfPresent(notes, forKey: .notes)
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        date = try container.decode(String.self, forKey: .date)
+        let availableInt = try container.decode(Int.self, forKey: .isAvailable)
+        isAvailable = availableInt == 1
+        shiftPreference = try container.decodeIfPresent(Int.self, forKey: .shiftPreference)
+        customStart = try container.decodeIfPresent(String.self, forKey: .customStart)
+        customEnd = try container.decodeIfPresent(String.self, forKey: .customEnd)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+    }
+
+    init(date: String, isAvailable: Bool, shiftPreference: Int?, customStart: String?, customEnd: String?, notes: String?) {
+        self.date = date
+        self.isAvailable = isAvailable
+        self.shiftPreference = shiftPreference
+        self.customStart = customStart
+        self.customEnd = customEnd
+        self.notes = notes
+    }
 }
 
 struct AvailabilityUpsertRequest: Codable {

@@ -63,6 +63,13 @@ struct AvailabilityView: View {
                 Text(status).font(.footnote).foregroundStyle(.secondary)
             }
 
+            if vm.locationId == 0 {
+                Text("Geen locatie gekoppeld aan je account.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+
             Spacer(minLength: 0)
         }
         .padding(.horizontal)

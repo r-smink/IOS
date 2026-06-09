@@ -21,7 +21,7 @@ struct NotificationsView: View {
                         if let msg = n.message, !msg.isEmpty {
                             Text(msg)
                         }
-                        Text(n.createdAt).font(.caption).foregroundStyle(.secondary)
+                        Text(n.createdAt.formattedNotificationDate).font(.caption).foregroundStyle(.secondary)
                         if n.isRead == 0 {
                             Button("Markeer gelezen") {
                                 Task { await vm.markNotificationRead(id: n.id) }
