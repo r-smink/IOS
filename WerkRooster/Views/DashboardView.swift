@@ -10,8 +10,8 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 16) {
                 header
                 nextShiftCard
-                if let me = vm.me, !me.locations.isEmpty {
-                    Text("Locaties: \(me.locations.map(\.name).joined(separator: ", "))")
+                if let me = vm.me, let locations = me.locations, !locations.isEmpty {
+                    Text("Locaties: \(locations.map(\.name).joined(separator: ", "))")
                         .foregroundStyle(.secondary)
                 }
                 LazyVGrid(columns: columns, spacing: 12) {
@@ -42,7 +42,7 @@ struct DashboardView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Welkom,")
-                Text(vm.me?.user.displayName ?? "")
+                Text(vm.me?.user?.displayName ?? "")
                     .font(.title2.bold())
             }
             Spacer()

@@ -31,9 +31,9 @@ struct LogoutRequest: Codable {
 }
 
 struct MeResponse: Codable {
-    let user: User
-    let employee: Employee
-    let locations: [Location]
+    let user: User?
+    let employee: Employee?
+    let locations: [Location]?
     let icalUrl: String?
 }
 

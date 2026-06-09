@@ -30,7 +30,7 @@ final class AppViewModel: ObservableObject {
             switch self {
             case .dashboard: return "square.grid.2x2"
             case .schedule: return "calendar"
-            case .availability: return "checkmark.calendar"
+            case .availability: return "checkmark.circle"
             case .profile: return "person"
             case .chat: return "bubble.left.and.bubble.right"
             case .sick: return "cross.case"
@@ -64,11 +64,11 @@ final class AppViewModel: ObservableObject {
     }
 
     var locationId: Int {
-        me?.locations.first?.id ?? 0
+        me?.locations?.first?.id ?? 0
     }
 
     var currentUserId: Int {
-        me?.user.id ?? 0
+        me?.user?.id ?? 0
     }
 
     func bootstrap() async {
@@ -356,7 +356,7 @@ final class AppViewModel: ObservableObject {
             await registerFCMToken(fcmToken)
         }
 
-        if let location = me?.locations.first {
+        if let location = me?.locations?.first {
             do {
                 shifts = try await authorized {
                     try await api.shifts(baseUrl: config.baseUrl, token: self.config?.accessToken, locationId: location.id)

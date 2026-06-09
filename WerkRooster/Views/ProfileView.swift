@@ -7,10 +7,12 @@ struct ProfileView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if let me = vm.me {
-                    GroupBox("Gebruikersgegevens") {
-                        profileRow("Naam", me.user.displayName)
-                        profileRow("E-mail", me.user.email)
-                        profileRow("Locaties", me.locations.map(\.name).joined(separator: ", "))
+                    if let user = me.user {
+                        GroupBox("Gebruikersgegevens") {
+                            profileRow("Naam", user.displayName)
+                            profileRow("E-mail", user.email)
+                            profileRow("Locaties", me.locations?.map(\.name).joined(separator: ", ") ?? "Geen")
+                        }
                     }
 
                     if let ical = me.icalUrl, let url = URL(string: ical) {
