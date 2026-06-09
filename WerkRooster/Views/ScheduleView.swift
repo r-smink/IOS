@@ -65,32 +65,6 @@ private struct ScheduleCard: View {
     }
 }
 
-private struct MonthHeader: View {
-    @Binding var monthDate: Date
-    let onChange: (Date) -> Void
-
-    var body: some View {
-        HStack {
-            Button {
-                monthDate = Calendar.current.date(byAdding: .month, value: -1, to: monthDate) ?? monthDate
-                onChange(monthDate)
-            } label: {
-                Image(systemName: "chevron.left")
-            }
-            Spacer()
-            Text(monthDate.monthTitle)
-                .font(.headline)
-            Spacer()
-            Button {
-                monthDate = Calendar.current.date(byAdding: .month, value: 1, to: monthDate) ?? monthDate
-                onChange(monthDate)
-            } label: {
-                Image(systemName: "chevron.right")
-            }
-        }
-    }
-}
-
 private struct ScheduleCalendar: View {
     let monthDate: Date
     let schedules: [ScheduleItem]
@@ -156,43 +130,5 @@ private struct ScheduleCalendar: View {
                 .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Sluiten") { selected = [] } } }
             }
         }
-    }
-}
-
-private extension Date {
-    var monthTitle: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "nl_NL")
-        formatter.dateFormat = "LLLL yyyy"
-        return formatter.string(from: self).capitalized
-    }
-
-    var startOfMonth: Date {
-        Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: self)) ?? self
-    }
-
-    var endOfMonth: Date {
-        let start = startOfMonth
-        return Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: start) ?? self
-    }
-
-    var daysInMonth: Int {
-        Calendar.current.range(of: .day, in: .month, for: self)?.count ?? 30
-    }
-
-    var leadingWeekdayOffset: Int {
-        let day = Calendar.current.component(.weekday, from: startOfMonth)
-        return (day + 5) % 7
-    }
-
-    func dateFor(day: Int) -> Date {
-        Calendar.current.date(byAdding: .day, value: day - 1, to: startOfMonth) ?? self
-    }
-
-    var isoDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter.string(from: self)
     }
 }

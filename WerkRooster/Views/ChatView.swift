@@ -7,20 +7,24 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(vm.chatMessages) { message in
-                            ChatBubble(message: message, isMe: message.senderId == vm.currentUserId)
-                                .id(message.id)
+                if #available(iOS 17.0, *) {
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(vm.chatMessages) { message in
+                                ChatBubble(message: message, isMe: message.senderId == vm.currentUserId)
+                                    .id(message.id)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 16)
+                    }
+                    .onChange(of: vm.chatMessages.count) { _, _ in
+                        if let last = vm.chatMessages.last {
+                            withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 16)
-                }
-                .onChange(of: vm.chatMessages.count) { _, _ in
-                    if let last = vm.chatMessages.last {
-                        withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
-                    }
+                } else {
+                    // Fallback on earlier versions
                 }
             }
 

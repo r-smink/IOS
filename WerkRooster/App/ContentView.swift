@@ -8,7 +8,11 @@ struct ContentView: View {
             if vm.config == nil {
                 LoginView()
             } else if vm.me != nil {
-                MainShellView()
+                if #available(iOS 17.0, *) {
+                    MainShellView()
+                } else {
+                    // Fallback on earlier versions
+                }
             } else {
                 ProgressView("Laden...")
             }
@@ -25,33 +29,39 @@ struct ContentView: View {
     }
 }
 
+@available(iOS 17.0, *)
 private struct MainShellView: View {
     @EnvironmentObject private var vm: AppViewModel
 
+    @available(iOS 17.0, *)
     var body: some View {
-        NavigationStack {
-            destinationView
-                .navigationTitle(vm.currentDest.title)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Menu {
-                            ForEach(AppViewModel.Dest.allCases) { dest in
-                                Button(dest.title, systemImage: dest.symbol) {
-                                    vm.destinationChanged(dest)
+        if #available(iOS 17.0, *) {
+            NavigationStack {
+                destinationView
+                    .navigationTitle(vm.currentDest.title)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Menu {
+                                ForEach(AppViewModel.Dest.allCases) { dest in
+                                    Button(dest.title, systemImage: dest.symbol) {
+                                        vm.destinationChanged(dest)
+                                    }
                                 }
+                                Divider()
+                                Button("Log uit", role: .destructive) {
+                                    Task { await vm.logout() }
+                                }
+                            } label: {
+                                Image(systemName: "line.3.horizontal")
                             }
-                            Divider()
-                            Button("Log uit", role: .destructive) {
-                                Task { await vm.logout() }
-                            }
-                        } label: {
-                            Image(systemName: "line.3.horizontal")
                         }
                     }
-                }
-        }
-        .onChange(of: vm.currentDest) { _, _ in
-            vm.ensureChatConnected()
+            }
+            .onChange(of: vm.currentDest) { _, _ in
+                vm.ensureChatConnected()
+            }
+        } else {
+            // Fallback on earlier versions
         }
     }
 

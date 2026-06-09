@@ -76,19 +76,16 @@ final class AppViewModel: ObservableObject {
         await loadSessionData()
     }
 
-    func login(baseUrl: String, username: String, password: String) async {
-        guard !baseUrl.trimmingCharacters(in: .whitespaces).isEmpty else {
-            error = "Voer een geldige site URL in."
-            return
-        }
+    private let defaultBaseUrl = "https://servawerkroosters.nl"
 
+    func login(username: String, password: String) async {
         loading = true
         error = nil
         defer { loading = false }
 
         do {
             let response = try await api.login(
-                baseUrl: baseUrl,
+                baseUrl: defaultBaseUrl,
                 body: LoginRequest(
                     username: username,
                     password: password,
@@ -96,7 +93,7 @@ final class AppViewModel: ObservableObject {
                 )
             )
             let newConfig = AuthConfig(
-                baseUrl: baseUrl,
+                baseUrl: defaultBaseUrl,
                 username: username,
                 accessToken: response.accessToken,
                 refreshToken: response.refreshToken
@@ -309,20 +306,30 @@ final class AppViewModel: ObservableObject {
             me = try await authorized {
                 try await api.me(baseUrl: config.baseUrl, token: self.config?.accessToken)
             }
+        } catch APIError.unauthorized {
+            // Alleen uitloggen bij echte auth fout
+            self.error = "Sessie verlopen, log opnieuw in."
+            clearSession()
+            return
+        } catch {
+            self.error = "Kon profiel niet laden: \(error.localizedDescription)"
+            clearSession()
+            return
+        }
 
-            await refreshSchedules(daysAhead: 30)
+        // Schedules en shifts los laden - fouten hier loggen maar niet uitloggen
+        await refreshSchedules(daysAhead: 30)
 
-            if let location = me?.locations.first {
+        if let location = me?.locations.first {
+            do {
                 shifts = try await authorized {
                     try await api.shifts(baseUrl: config.baseUrl, token: self.config?.accessToken, locationId: location.id)
                 }
+            } catch {
+                self.error = error.localizedDescription
             }
-        } catch {
-            self.error = "Sessie verlopen, log opnieuw in."
-            clearSession()
         }
     }
-
     private func authorized<T>(_ operation: () async throws -> T) async throws -> T {
         do {
             return try await operation()

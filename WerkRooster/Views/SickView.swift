@@ -11,7 +11,7 @@ struct SickView: View {
 
             if let phone = vm.teamPhone, !phone.isEmpty {
                 Button("Bel teamleider: \(phone)") {
-                    let cleaned = phone.replacingOccurrences(of: " ", with: "")
+                    let cleaned = phone.filter { $0.isNumber || $0 == "+" }
                     if let url = URL(string: "tel://\(cleaned)") {
                         UIApplication.shared.open(url)
                     }

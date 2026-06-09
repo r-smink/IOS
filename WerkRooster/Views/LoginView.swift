@@ -2,7 +2,6 @@ import SwiftUI
 
 struct LoginView: View {
     @EnvironmentObject private var vm: AppViewModel
-    @State private var url = "https://"
     @State private var username = ""
     @State private var password = ""
 
@@ -10,13 +9,9 @@ struct LoginView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Verbind met WerkRooster")
                 .font(.title2.bold())
-            Text("Voer je WordPress site URL en inloggegevens in.")
+            Text("Voer je inloggegevens in.")
                 .foregroundStyle(.secondary)
 
-            TextField("WordPress site URL", text: $url)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.URL)
-                .textFieldStyle(.roundedBorder)
             TextField("Gebruikersnaam", text: $username)
                 .textInputAutocapitalization(.never)
                 .textFieldStyle(.roundedBorder)
@@ -24,7 +19,7 @@ struct LoginView: View {
                 .textFieldStyle(.roundedBorder)
 
             Button(vm.loading ? "Inloggen..." : "Inloggen") {
-                Task { await vm.login(baseUrl: url.trimmingCharacters(in: .whitespaces), username: username, password: password) }
+                Task { await vm.login(username: username, password: password) }
             }
             .buttonStyle(.borderedProminent)
             .disabled(vm.loading)

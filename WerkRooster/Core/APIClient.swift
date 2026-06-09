@@ -64,7 +64,13 @@ final class APIClient {
     }
 
     func markNotificationRead(baseUrl: String, token: String?, id: Int) async throws {
-        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/notifications/\(id)/read", method: "POST", token: token)
+        _ = try await requestEmpty(
+            baseUrl: baseUrl,
+            path: "wp-json/roosterplanner/v1/notifications/\(id)/read",
+            method: "POST",
+            token: token,
+            body: Optional<String>.none
+        )
     }
 
     func availability(baseUrl: String, token: String?, month: String, locationId: Int) async throws -> AvailabilityResponse {

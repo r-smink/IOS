@@ -1,0 +1,392 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1E47D89686AE45DDE9D899BC /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1D05EEB1800749A90FA931 /* Models.swift */; };
+		1E4D5945EBF6F43823FBB32D /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1F4BBAF6E2D003AD8B83A6 /* Formatting.swift */; };
+		29BF0E01871F62DBA9D4AAC0 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8A3F35B0E6DEE1FFDD5E6D /* Storage.swift */; };
+		3DC3F30664BF770C55F0B96A /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C403C1DC2C4B6D2AC62267FF /* ProfileView.swift */; };
+		596C711FD02D5BE404E51D60 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3524F0BCC2971324951D2388 /* LoginView.swift */; };
+		65536BA2073A2163F7B0D355 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C67D83D15EB980C8FAE279D /* NotificationsView.swift */; };
+		737CDF1C69BA98A5D42AEAF4 /* AvailabilityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D3BB0CA57F0FBA2204A7A0 /* AvailabilityView.swift */; };
+		B4E3B918203C1433E3D911D0 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7DF87D5383A2D9EF46242D5 /* AppViewModel.swift */; };
+		BDAD359137B4E732E4E9B757 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACCF03AA98508DEC8BE12151 /* ChatView.swift */; };
+		C5F125D3FA6A895E4AAE3C91 /* WerkRoosterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F93CFA56C5683038F1BC4F9 /* WerkRoosterApp.swift */; };
+		C73F60EEDB5C9B4EA44C9BE5 /* ScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B28B94D7B6554FDBA8EAA7F /* ScheduleView.swift */; };
+		CF58F95F347D116BF270B2AF /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB9ACF0CC7643F6DF3DDE77 /* DashboardView.swift */; };
+		D00FBAE05743B903E68819E7 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601E0ADD82891F8EAB9F7E36 /* APIClient.swift */; };
+		F971633AE4B7A985199313CA /* SickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7EB8608C900A884818F607 /* SickView.swift */; };
+		FC833C7375F75F70221D9299 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC2F8C3DC6B53C3CA32269BF /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0F93CFA56C5683038F1BC4F9 /* WerkRoosterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WerkRoosterApp.swift; sourceTree = "<group>"; };
+		3524F0BCC2971324951D2388 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		4B28B94D7B6554FDBA8EAA7F /* ScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleView.swift; sourceTree = "<group>"; };
+		601E0ADD82891F8EAB9F7E36 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		65D3BB0CA57F0FBA2204A7A0 /* AvailabilityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilityView.swift; sourceTree = "<group>"; };
+		6C67D83D15EB980C8FAE279D /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
+		AC1F4BBAF6E2D003AD8B83A6 /* Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatting.swift; sourceTree = "<group>"; };
+		AC2F8C3DC6B53C3CA32269BF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		ACCF03AA98508DEC8BE12151 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		BC7EB8608C900A884818F607 /* SickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SickView.swift; sourceTree = "<group>"; };
+		C403C1DC2C4B6D2AC62267FF /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		C64B8BA8ADA7B1B2E015D223 /* WerkRooster.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WerkRooster.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DF8A3F35B0E6DEE1FFDD5E6D /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		F7DF87D5383A2D9EF46242D5 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
+		FB1D05EEB1800749A90FA931 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		FBB9ACF0CC7643F6DF3DDE77 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		077FF5A6D803F293CE63544A /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				601E0ADD82891F8EAB9F7E36 /* APIClient.swift */,
+				AC1F4BBAF6E2D003AD8B83A6 /* Formatting.swift */,
+				DF8A3F35B0E6DEE1FFDD5E6D /* Storage.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		16E34BA439D5E422230F6843 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FB1D05EEB1800749A90FA931 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1C2A49FFF301C2DE616346A7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				65D3BB0CA57F0FBA2204A7A0 /* AvailabilityView.swift */,
+				ACCF03AA98508DEC8BE12151 /* ChatView.swift */,
+				FBB9ACF0CC7643F6DF3DDE77 /* DashboardView.swift */,
+				3524F0BCC2971324951D2388 /* LoginView.swift */,
+				6C67D83D15EB980C8FAE279D /* NotificationsView.swift */,
+				C403C1DC2C4B6D2AC62267FF /* ProfileView.swift */,
+				4B28B94D7B6554FDBA8EAA7F /* ScheduleView.swift */,
+				BC7EB8608C900A884818F607 /* SickView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		44888E47BEC907CE0F1D7C5E = {
+			isa = PBXGroup;
+			children = (
+				8EBC91144392575EB549DE8D /* WerkRooster */,
+				BF05AF2D66E9BB51C6872C52 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8EBC91144392575EB549DE8D /* WerkRooster */ = {
+			isa = PBXGroup;
+			children = (
+				941C4BAA9F8D6D4A70B25767 /* App */,
+				077FF5A6D803F293CE63544A /* Core */,
+				16E34BA439D5E422230F6843 /* Models */,
+				1C2A49FFF301C2DE616346A7 /* Views */,
+			);
+			path = WerkRooster;
+			sourceTree = "<group>";
+		};
+		941C4BAA9F8D6D4A70B25767 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F7DF87D5383A2D9EF46242D5 /* AppViewModel.swift */,
+				AC2F8C3DC6B53C3CA32269BF /* ContentView.swift */,
+				0F93CFA56C5683038F1BC4F9 /* WerkRoosterApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		BF05AF2D66E9BB51C6872C52 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C64B8BA8ADA7B1B2E015D223 /* WerkRooster.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		63F03080C9D5A77A75222D01 /* WerkRooster */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 68FF8A0CEF5DCC41A3FB9DFC /* Build configuration list for PBXNativeTarget "WerkRooster" */;
+			buildPhases = (
+				C5AC63F41D20605BB81C8E24 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WerkRooster;
+			packageProductDependencies = (
+			);
+			productName = WerkRooster;
+			productReference = C64B8BA8ADA7B1B2E015D223 /* WerkRooster.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B9E9F15F1EE577D9F5320F20 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2640;
+			};
+			buildConfigurationList = 6713C13569C3150F7E659822 /* Build configuration list for PBXProject "WerkRooster" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 44888E47BEC907CE0F1D7C5E;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = BF05AF2D66E9BB51C6872C52 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				63F03080C9D5A77A75222D01 /* WerkRooster */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C5AC63F41D20605BB81C8E24 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D00FBAE05743B903E68819E7 /* APIClient.swift in Sources */,
+				B4E3B918203C1433E3D911D0 /* AppViewModel.swift in Sources */,
+				737CDF1C69BA98A5D42AEAF4 /* AvailabilityView.swift in Sources */,
+				BDAD359137B4E732E4E9B757 /* ChatView.swift in Sources */,
+				FC833C7375F75F70221D9299 /* ContentView.swift in Sources */,
+				CF58F95F347D116BF270B2AF /* DashboardView.swift in Sources */,
+				1E4D5945EBF6F43823FBB32D /* Formatting.swift in Sources */,
+				596C711FD02D5BE404E51D60 /* LoginView.swift in Sources */,
+				1E47D89686AE45DDE9D899BC /* Models.swift in Sources */,
+				65536BA2073A2163F7B0D355 /* NotificationsView.swift in Sources */,
+				3DC3F30664BF770C55F0B96A /* ProfileView.swift in Sources */,
+				C73F60EEDB5C9B4EA44C9BE5 /* ScheduleView.swift in Sources */,
+				F971633AE4B7A985199313CA /* SickView.swift in Sources */,
+				29BF0E01871F62DBA9D4AAC0 /* Storage.swift in Sources */,
+				C5F125D3FA6A895E4AAE3C91 /* WerkRoosterApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		07FE46C01DC7D3FB6D0875DD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=iphone*]" = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roosterplanner.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		2DC27929D14D2465424304BE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=iphone*]" = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roosterplanner.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		7992E1AB4F135D212264D751 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_KEY_CFBundleDisplayName = "Serva Werkroosters";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		8E3351E4E716BF6DA0FA275F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_KEY_CFBundleDisplayName = "Serva Werkroosters";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6713C13569C3150F7E659822 /* Build configuration list for PBXProject "WerkRooster" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				07FE46C01DC7D3FB6D0875DD /* Debug */,
+				2DC27929D14D2465424304BE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		68FF8A0CEF5DCC41A3FB9DFC /* Build configuration list for PBXNativeTarget "WerkRooster" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8E3351E4E716BF6DA0FA275F /* Debug */,
+				7992E1AB4F135D212264D751 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B9E9F15F1EE577D9F5320F20 /* Project object */;
+}
