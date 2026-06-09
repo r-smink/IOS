@@ -164,6 +164,9 @@ final class APIClient {
         body: B? = nil
     ) async throws -> T {
         let data = try await requestData(baseUrl: baseUrl, path: path, method: method, token: token, query: query, body: body)
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("[DEBUG] Response JSON for \(path): \(jsonString)")
+        }
         return try decoder.decode(T.self, from: data)
     }
 
@@ -175,6 +178,9 @@ final class APIClient {
         query: [URLQueryItem] = []
     ) async throws -> T {
         let data = try await requestData(baseUrl: baseUrl, path: path, method: method, token: token, query: query, body: Optional<String>.none)
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("[DEBUG] Response JSON for \(path): \(jsonString)")
+        }
         return try decoder.decode(T.self, from: data)
     }
 
