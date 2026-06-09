@@ -183,3 +183,8 @@ struct APIErrorResponse: Codable {
     let code: String?
     let message: String?
 }
+
+struct DeviceRegistrationRequest: Codable {
+    let fcmToken: String
+    let platform: String
+}

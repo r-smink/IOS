@@ -94,6 +94,16 @@ final class APIClient {
         _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/sick", method: "POST", token: token, body: SickReportRequest(reason: reason))
     }
 
+    func registerDevice(baseUrl: String, token: String?, fcmToken: String) async throws {
+        _ = try await requestEmpty(
+            baseUrl: baseUrl,
+            path: "wp-json/roosterplanner/v1/devices",
+            method: "POST",
+            token: token,
+            body: DeviceRegistrationRequest(fcmToken: fcmToken, platform: "ios")
+        )
+    }
+
     func chatHistory(baseUrl: String, token: String?, lastId: Int? = nil) async throws -> [ChatMessage] {
         var query: [URLQueryItem] = [URLQueryItem(name: "limit", value: "50")]
         if let lastId {

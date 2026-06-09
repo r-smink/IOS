@@ -56,6 +56,7 @@ final class AppViewModel: ObservableObject {
     private let storage = Storage()
     private let api = APIClient()
     private var chatTask: Task<Void, Never>?
+    private var pendingFCMToken: String?
 
     var nextShift: ScheduleItem? {
         let today = DateFormatter.isoDate.string(from: Date())
@@ -285,6 +286,34 @@ final class AppViewModel: ObservableObject {
         DateFormatter.yearMonth.string(from: date)
     }
 
+    func registerFCMToken(_ token: String) async {
+        guard let config else {
+            pendingFCMToken = token
+            return
+        }
+        do {
+            _ = try await authorized {
+                try await api.registerDevice(baseUrl: config.baseUrl, token: self.config?.accessToken, fcmToken: token)
+            } as Void
+            pendingFCMToken = nil
+        } catch {
+            pendingFCMToken = token
+        }
+    }
+
+    func handleNotificationTap(type: String) {
+        switch type {
+        case "schedule", "shift":
+            destinationChanged(.schedule)
+        case "chat", "message":
+            destinationChanged(.chat)
+        case "availability":
+            destinationChanged(.availability)
+        default:
+            destinationChanged(.notifications)
+        }
+    }
+
     func allAvailable() {
         for key in availabilityEntries.keys {
             if var item = availabilityEntries[key] {
@@ -319,6 +348,11 @@ final class AppViewModel: ObservableObject {
 
         // Schedules en shifts los laden - fouten hier loggen maar niet uitloggen
         await refreshSchedules(daysAhead: 30)
+
+        // Register pending FCM token if available
+        if let fcmToken = pendingFCMToken {
+            await registerFCMToken(fcmToken)
+        }
 
         if let location = me?.locations.first {
             do {
