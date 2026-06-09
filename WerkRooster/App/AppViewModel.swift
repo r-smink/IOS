@@ -90,7 +90,7 @@ final class AppViewModel: ObservableObject {
                 body: LoginRequest(
                     username: username,
                     password: password,
-                    deviceId: UIDevice.current.identifierForVendor?.uuidString
+                    deviceId: UIDevice.current.identifierForVendor?.uuidString ?? "simulator-\(UUID().uuidString)"
                 )
             )
             let newConfig = AuthConfig(
@@ -102,8 +102,12 @@ final class AppViewModel: ObservableObject {
             config = newConfig
             storage.saveConfig(newConfig)
             await loadSessionData()
+        } catch let apiErr as APIError {
+            self.error = "Inloggen mislukt: \(apiErr.localizedDescription)"
+            print("[DEBUG] Login APIError: \(apiErr)")
         } catch {
             self.error = "Inloggen mislukt: \(error.localizedDescription)"
+            print("[DEBUG] Login error: \(error)")
         }
     }
 
@@ -336,14 +340,12 @@ final class AppViewModel: ObservableObject {
                 try await api.me(baseUrl: config.baseUrl, token: self.config?.accessToken)
             }
         } catch APIError.unauthorized {
-            // Alleen uitloggen bij echte auth fout
             self.error = "Sessie verlopen, log opnieuw in."
             clearSession()
             return
         } catch {
             self.error = "Kon profiel niet laden: \(error.localizedDescription)"
-            clearSession()
-            return
+            // Niet uitloggen - laat gebruiker de app in
         }
 
         // Schedules en shifts los laden - fouten hier loggen maar niet uitloggen

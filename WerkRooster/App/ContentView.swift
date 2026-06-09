@@ -7,10 +7,8 @@ struct ContentView: View {
         Group {
             if vm.config == nil {
                 LoginView()
-            } else if vm.me != nil {
-                MainShellView()
             } else {
-                ProgressView("Laden...")
+                MainShellView()
             }
         }
         .alert("Fout", isPresented: Binding(get: {
@@ -50,7 +48,7 @@ private struct MainShellView: View {
                     }
                 }
         }
-        .onChange(of: vm.currentDest) { _, newValue in
+        .onChange(of: vm.currentDest) { _ in
             vm.ensureChatConnected()
         }        
     }

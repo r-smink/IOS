@@ -17,7 +17,7 @@ struct ChatView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 16)
                 }
-                .onChange(of: vm.chatMessages.count) { _, _ in
+                .onChange(of: vm.chatMessages.count) { _ in
                     if let last = vm.chatMessages.last {
                         withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
                     }

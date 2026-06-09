@@ -210,6 +210,7 @@ final class APIClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("WerkRooster-iOS/1.0", forHTTPHeaderField: "User-Agent")
+        print("[DEBUG] Request: \(method) \(url.absoluteString)")
         if let token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
@@ -235,11 +236,13 @@ final class APIClient {
         }
 
         guard 200..<300 ~= http.statusCode else {
+            let bodyString = String(data: data, encoding: .utf8) ?? "<no body>"
+            print("[DEBUG] HTTP Error \(http.statusCode) for \(url.absoluteString)")
+            print("[DEBUG] Response body: \(bodyString)")
             if let apiError = try? decoder.decode(APIErrorResponse.self, from: data), let message = apiError.message {
                 throw APIError.server(message)
             }
-            let message = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
-            throw APIError.server(message)
+            throw APIError.server("HTTP \(http.statusCode): \(bodyString)")
         }
 
         return data
