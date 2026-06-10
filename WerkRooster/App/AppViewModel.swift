@@ -233,7 +233,8 @@ final class AppViewModel: ObservableObject {
             }
             mergeChat(message)
         } catch {
-            self.error = error.localizedDescription
+            print("[DEBUG] Send chat error: \(error)")
+            // Chat errors niet als alert tonen
         }
     }
 
@@ -253,7 +254,8 @@ final class AppViewModel: ObservableObject {
                 }
                 self.chatMessages = history
             } catch {
-                self.error = error.localizedDescription
+                print("[DEBUG] Chat history error: \(error)")
+                // Chat errors niet als alert tonen
             }
 
             while !Task.isCancelled && self.currentDest == .chat {
