@@ -7,6 +7,8 @@ extension KeyedDecodingContainer {
         } else if let stringValue = try? decode(String.self, forKey: key),
                   let intValue = Int(stringValue) {
             return intValue
+        } else if let boolValue = try? decode(Bool.self, forKey: key) {
+            return boolValue ? 1 : 0
         }
         throw DecodingError.typeMismatch(Int.self, DecodingError.Context(codingPath: codingPath + [key], debugDescription: "Expected Int or String convertible to Int"))
     }
@@ -17,6 +19,8 @@ extension KeyedDecodingContainer {
         } else if let stringValue = try? decode(String.self, forKey: key),
                   let intValue = Int(stringValue) {
             return intValue
+        } else if let boolValue = try? decode(Bool.self, forKey: key) {
+            return boolValue ? 1 : 0
         }
         return nil
     }
@@ -204,9 +208,10 @@ struct AvailabilityItem: Codable, Identifiable {
     let customStart: String?
     let customEnd: String?
     let notes: String?
+    let submittedAt: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, workDate, isAvailable, shiftPreference, customStart, customEnd, notes
+        case id, workDate, isAvailable, shiftPreference, customStart, customEnd, notes, submittedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -218,6 +223,7 @@ struct AvailabilityItem: Codable, Identifiable {
         customStart = try container.decodeIfPresent(String.self, forKey: .customStart)
         customEnd = try container.decodeIfPresent(String.self, forKey: .customEnd)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        submittedAt = try container.decodeIfPresent(String.self, forKey: .submittedAt)
     }
 }
 
@@ -349,6 +355,16 @@ struct AvailabilityUpsertRequest: Codable {
 
 struct SickReportRequest: Codable {
     let reason: String?
+}
+
+struct TeamPhoneContact: Codable, Identifiable {
+    let name: String
+    let phone: String
+    var id: String { "\(name)-\(phone)" }
+}
+
+struct TeamPhoneResponse: Codable {
+    let contacts: [TeamPhoneContact]
 }
 
 struct APIErrorResponse: Codable {

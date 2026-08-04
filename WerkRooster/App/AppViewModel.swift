@@ -46,12 +46,13 @@ final class AppViewModel: ObservableObject {
     @Published var chatMessages: [ChatMessage] = []
     @Published var shifts: [Shift] = []
     @Published var availabilityEntries: [String: AvailabilityEntryRequest] = [:]
+    @Published var availabilitySubmittedDates: Set<String> = []
     @Published var availabilityStatus: String?
     @Published var loading = false
     @Published var error: String?
     @Published var currentDest: Dest = .dashboard
     @Published var selectedMonth: Date = Date()
-    @Published var teamPhone: String? = "+31638993687"
+    @Published var teamPhoneContacts: [TeamPhoneContact] = []
 
     private let storage = Storage()
     private let api = APIClient()
@@ -178,6 +179,7 @@ final class AppViewModel: ObservableObject {
             }
 
             var map = buildMonthDefaults(monthString: monthString)
+            var submitted: Set<String> = []
             for item in response.items {
                 map[item.workDate] = AvailabilityEntryRequest(
                     date: item.workDate,
@@ -187,8 +189,12 @@ final class AppViewModel: ObservableObject {
                     customEnd: item.customEnd,
                     notes: item.notes
                 )
+                if let submittedAt = item.submittedAt, !submittedAt.isEmpty {
+                    submitted.insert(item.workDate)
+                }
             }
             availabilityEntries = map
+            availabilitySubmittedDates = submitted
         } catch {
             availabilityStatus = "Kon beschikbaarheid niet laden"
         }
@@ -204,6 +210,7 @@ final class AppViewModel: ObservableObject {
             _ = try await authorized {
                 try await api.upsertAvailability(baseUrl: config.baseUrl, token: self.config?.accessToken, body: body)
             } as Void
+            availabilitySubmittedDates = Set(availabilityEntries.keys)
             availabilityStatus = "Opgeslagen"
         } catch {
             availabilityStatus = error.localizedDescription
@@ -255,17 +262,39 @@ final class AppViewModel: ObservableObject {
                 self.chatMessages = history
             } catch {
                 print("[DEBUG] Chat history error: \(error)")
-                // Chat errors niet als alert tonen
             }
 
+            var sseFailed = false
             while !Task.isCancelled && self.currentDest == .chat {
                 let lastId = self.chatMessages.last?.id ?? 0
-                await self.api.streamChat(baseUrl: config.baseUrl, token: self.config?.accessToken, lastId: lastId) { [weak self] message in
-                    Task { @MainActor in
-                        self?.mergeChat(message)
+                if sseFailed {
+                    // Fallback: poll via HTTP every 5 seconds
+                    do {
+                        let newMessages = try await self.authorized {
+                            try await self.api.chatHistory(baseUrl: config.baseUrl, token: self.config?.accessToken, lastId: lastId)
+                        }
+                        for msg in newMessages {
+                            self.mergeChat(msg)
+                        }
+                    } catch {
+                        print("[DEBUG] Chat poll error: \(error)")
                     }
+                    try? await Task.sleep(for: .seconds(5))
+                } else {
+                    // Try SSE stream
+                    let startTime = Date()
+                    await self.api.streamChat(baseUrl: config.baseUrl, token: self.config?.accessToken, lastId: lastId) { [weak self] message in
+                        Task { @MainActor in
+                            self?.mergeChat(message)
+                        }
+                    }
+                    // If SSE returned almost immediately, it likely failed
+                    if Date().timeIntervalSince(startTime) < 2 {
+                        sseFailed = true
+                        print("[DEBUG] SSE stream failed quickly, falling back to polling")
+                    }
+                    try? await Task.sleep(for: .seconds(3))
                 }
-                try? await Task.sleep(for: .seconds(3))
             }
         }
     }
@@ -304,6 +333,18 @@ final class AppViewModel: ObservableObject {
             pendingFCMToken = nil
         } catch {
             pendingFCMToken = token
+        }
+    }
+
+    func fetchTeamPhone() async {
+        guard let config else { return }
+        do {
+            let response = try await authorized {
+                try await api.teamPhone(baseUrl: config.baseUrl, token: self.config?.accessToken)
+            }
+            teamPhoneContacts = response.contacts
+        } catch {
+            print("[DEBUG] Team phone error: \(error)")
         }
     }
 
@@ -352,6 +393,9 @@ final class AppViewModel: ObservableObject {
 
         // Schedules en shifts los laden - fouten hier loggen maar niet uitloggen
         await refreshSchedules(daysAhead: 30)
+
+        // Fetch team phone numbers
+        await fetchTeamPhone()
 
         // Register pending FCM token if available
         if let fcmToken = pendingFCMToken {
@@ -404,6 +448,8 @@ final class AppViewModel: ObservableObject {
         chatMessages = []
         shifts = []
         availabilityEntries = [:]
+        availabilitySubmittedDates = []
+        teamPhoneContacts = []
         storage.clear()
         error = nil
         loading = false

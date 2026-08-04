@@ -95,6 +95,10 @@ final class APIClient {
         _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/sick", method: "POST", token: token, body: SickReportRequest(reason: reason))
     }
 
+    func teamPhone(baseUrl: String, token: String?) async throws -> TeamPhoneResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/team-phone", method: "GET", token: token)
+    }
+
     func registerDevice(baseUrl: String, token: String?, fcmToken: String) async throws {
         _ = try await requestEmpty(
             baseUrl: baseUrl,
@@ -127,7 +131,11 @@ final class APIClient {
         guard var components = URLComponents(string: baseUrl.ensureTrailingSlash() + "wp-json/roosterplanner/v1/chat/stream") else {
             return
         }
-        components.queryItems = [URLQueryItem(name: "last_id", value: "\(lastId)")]
+        var queryItems: [URLQueryItem] = [URLQueryItem(name: "last_id", value: "\(lastId)")]
+        if let token {
+            queryItems.append(URLQueryItem(name: "access_token", value: token))
+        }
+        components.queryItems = queryItems
         guard let url = components.url else { return }
 
         var request = URLRequest(url: url)

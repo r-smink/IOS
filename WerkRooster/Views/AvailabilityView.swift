@@ -28,6 +28,7 @@ struct AvailabilityView: View {
                 ForEach(1...monthDate.daysInMonth, id: \.self) { day in
                     let key = monthDate.dateFor(day: day).isoDate
                     let entry = vm.availabilityEntries[key] ?? AvailabilityEntryRequest(date: key, isAvailable: true, shiftPreference: nil, customStart: nil, customEnd: nil, notes: nil)
+                    let isSubmitted = vm.availabilitySubmittedDates.contains(key)
                     Button {
                         editing = entry
                     } label: {
@@ -35,10 +36,14 @@ struct AvailabilityView: View {
                             Text("\(day)").font(.caption.bold())
                             if entry.shiftPreference != nil {
                                 Circle().fill(Color.blue).frame(width: 4, height: 4)
+                            } else if isSubmitted {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundStyle(.green)
                             }
                         }
                         .frame(maxWidth: .infinity, minHeight: 40)
-                        .background(cellColor(entry), in: RoundedRectangle(cornerRadius: 8))
+                        .background(cellColor(entry, isSubmitted: isSubmitted), in: RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
                 }
@@ -63,6 +68,14 @@ struct AvailabilityView: View {
                 Text(status).font(.footnote).foregroundStyle(.secondary)
             }
 
+            HStack(spacing: 12) {
+                LegendDot(color: Color.green.opacity(0.2), label: "Ingediend")
+                LegendDot(color: Color.red.opacity(0.3), label: "Niet beschikbaar")
+                LegendDot(color: Color(.secondarySystemBackground).opacity(0.6), label: "Nog doorgeven")
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+
             if vm.locationId == 0 {
                 Text("Geen locatie gekoppeld aan je account.")
                     .font(.footnote)
@@ -84,10 +97,28 @@ struct AvailabilityView: View {
         }
     }
 
-    private func cellColor(_ entry: AvailabilityEntryRequest) -> Color {
-        if !entry.isAvailable { return Color.red.opacity(0.24) }
-        if entry.shiftPreference != nil { return Color.blue.opacity(0.2) }
+    private func cellColor(_ entry: AvailabilityEntryRequest, isSubmitted: Bool) -> Color {
+        if !entry.isAvailable {
+            return isSubmitted ? Color.red.opacity(0.3) : Color.red.opacity(0.12)
+        }
+        if isSubmitted {
+            return Color.green.opacity(0.2)
+        }
         return Color(.secondarySystemBackground).opacity(0.6)
+    }
+}
+
+private struct LegendDot: View {
+    let color: Color
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: 10, height: 10)
+            Text(label)
+        }
     }
 }
 

@@ -43,6 +43,14 @@ struct ScheduleView: View {
                         let end = monthDate.endOfMonth.isoDate
                         await vm.loadSchedules(start: start, end: end)
                     }
+                HStack(spacing: 10) {
+                    ScheduleLegendDot(color: .blue, label: "Gepland")
+                    ScheduleLegendDot(color: .green, label: "Voltooid")
+                    ScheduleLegendDot(color: .orange, label: "In wachting")
+                    ScheduleLegendDot(color: .red, label: "Geannuleerd")
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal)
@@ -63,9 +71,54 @@ private struct ScheduleCard: View {
             if let notes = item.notes, !notes.isEmpty {
                 Text(notes).font(.caption).foregroundStyle(.secondary)
             }
+            if item.status != "scheduled" {
+                StatusBadge(status: item.status)
+            }
         }
         .padding(12)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+        .background(cardBackground, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var cardBackground: Color {
+        switch item.status {
+        case "cancelled": return Color.red.opacity(0.12)
+        case "completed": return Color.green.opacity(0.12)
+        case "pending", "provisional": return Color.orange.opacity(0.12)
+        default: return Color(.secondarySystemBackground)
+        }
+    }
+}
+
+private struct StatusBadge: View {
+    let status: String
+
+    var body: some View {
+        Text(statusLabel)
+            .font(.caption2.bold())
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(badgeColor, in: Capsule())
+            .foregroundStyle(.white)
+    }
+
+    private var statusLabel: String {
+        switch status {
+        case "cancelled": return "GEANNULEERD"
+        case "completed": return "VOLTOOID"
+        case "pending", "provisional": return "IN WACHTING"
+        case "swapped": return "GERUILD"
+        default: return status.uppercased()
+        }
+    }
+
+    private var badgeColor: Color {
+        switch status {
+        case "cancelled": return .red
+        case "completed": return .green
+        case "pending", "provisional": return .orange
+        case "swapped": return .purple
+        default: return .gray
+        }
     }
 }
 
@@ -77,6 +130,28 @@ private struct ScheduleCalendar: View {
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
     private let weekdays = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"]
+
+    private func statusDotColor(_ status: String) -> Color {
+        switch status {
+        case "cancelled": return .red
+        case "completed": return .green
+        case "pending", "provisional": return .orange
+        case "swapped": return .purple
+        default: return .blue
+        }
+    }
+
+    private func dayCellBackground(_ daySchedules: [ScheduleItem]) -> Color {
+        if daySchedules.isEmpty { return Color(.secondarySystemBackground).opacity(0.5) }
+        let hasCancelled = daySchedules.contains { $0.status == "cancelled" }
+        let hasCompleted = daySchedules.contains { $0.status == "completed" }
+        let hasPending = daySchedules.contains { $0.status == "pending" || $0.status == "provisional" }
+        if hasCancelled && !daySchedules.allSatisfy({ $0.status == "cancelled" }) { return Color.orange.opacity(0.2) }
+        if hasCancelled { return Color.red.opacity(0.15) }
+        if hasCompleted { return Color.green.opacity(0.15) }
+        if hasPending { return Color.orange.opacity(0.15) }
+        return Color.blue.opacity(0.2)
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -107,14 +182,14 @@ private struct ScheduleCalendar: View {
                                 .fontWeight(daySchedules.isEmpty ? .regular : .bold)
                             if !daySchedules.isEmpty {
                                 HStack(spacing: 2) {
-                                    ForEach(0..<min(daySchedules.count, 3), id: \.self) { _ in
-                                        Circle().fill(Color.blue).frame(width: 4, height: 4)
+                                    ForEach(0..<min(daySchedules.count, 3), id: \.self) { i in
+                                        Circle().fill(statusDotColor(daySchedules[i].status)).frame(width: 4, height: 4)
                                     }
                                 }
                             }
                         }
                         .frame(maxWidth: .infinity, minHeight: 38)
-                        .background(daySchedules.isEmpty ? Color(.secondarySystemBackground).opacity(0.5) : Color.blue.opacity(0.2), in: RoundedRectangle(cornerRadius: 8))
+                        .background(dayCellBackground(daySchedules), in: RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
                 }
@@ -133,6 +208,20 @@ private struct ScheduleCalendar: View {
                 .navigationTitle("Diensten op \(selectedDate)")
                 .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Sluiten") { selected = [] } } }
             }
+        }
+    }
+}
+
+private struct ScheduleLegendDot: View {
+    let color: Color
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(label)
         }
     }
 }
