@@ -62,6 +62,10 @@ private struct MainShellView: View {
             ScheduleView()
         case .availability:
             AvailabilityView()
+        case .swaps:
+            SwapView()
+        case .timeoff:
+            TimeoffView()
         case .profile:
             ProfileView()
         case .chat:

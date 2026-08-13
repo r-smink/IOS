@@ -74,11 +74,12 @@ final class APIClient {
         )
     }
 
-    func availability(baseUrl: String, token: String?, month: String, locationId: Int) async throws -> AvailabilityResponse {
-        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/availability", method: "GET", token: token, query: [
-            URLQueryItem(name: "month", value: month),
-            URLQueryItem(name: "location_id", value: "\(locationId)")
-        ])
+    func availability(baseUrl: String, token: String?, month: String, locationId: Int?) async throws -> AvailabilityResponse {
+        var query: [URLQueryItem] = [URLQueryItem(name: "month", value: month)]
+        if let locationId {
+            query.append(URLQueryItem(name: "location_id", value: "\(locationId)"))
+        }
+        return try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/availability", method: "GET", token: token, query: query)
     }
 
     func upsertAvailability(baseUrl: String, token: String?, body: AvailabilityUpsertRequest) async throws {
@@ -107,6 +108,50 @@ final class APIClient {
             token: token,
             body: DeviceRegistrationRequest(fcmToken: fcmToken, platform: "ios")
         )
+    }
+
+    // MARK: - Shift swaps
+
+    func swapsMyShifts(baseUrl: String, token: String?) async throws -> MyShiftsResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/swaps/my-shifts", method: "GET", token: token)
+    }
+
+    func swapsAvailable(baseUrl: String, token: String?) async throws -> AvailableShiftsResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/swaps/available", method: "GET", token: token)
+    }
+
+    func swapsRequests(baseUrl: String, token: String?) async throws -> SwapsRequestsResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/swaps/requests", method: "GET", token: token)
+    }
+
+    func swapsColleagues(baseUrl: String, token: String?) async throws -> ColleaguesResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/swaps/colleagues", method: "GET", token: token)
+    }
+
+    func requestSwap(baseUrl: String, token: String?, body: RequestSwapBody) async throws {
+        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/swaps/request", method: "POST", token: token, body: body)
+    }
+
+    func respondSwap(baseUrl: String, token: String?, swapId: Int, action: String) async throws {
+        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/swaps/\(swapId)/respond", method: "POST", token: token, body: RespondSwapBody(action: action))
+    }
+
+    func claimSwap(baseUrl: String, token: String?, scheduleId: Int) async throws {
+        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/swaps/claim", method: "POST", token: token, body: ClaimSwapBody(scheduleId: scheduleId))
+    }
+
+    func toggleSwappable(baseUrl: String, token: String?, scheduleId: Int) async throws -> ToggleSwappableResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/schedules/\(scheduleId)/toggle-swappable", method: "POST", token: token)
+    }
+
+    // MARK: - Time off (verlof)
+
+    func timeoff(baseUrl: String, token: String?) async throws -> TimeoffResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/timeoff", method: "GET", token: token)
+    }
+
+    func submitTimeoff(baseUrl: String, token: String?, body: TimeoffRequestBody) async throws {
+        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/timeoff", method: "POST", token: token, body: body)
     }
 
     func chatHistory(baseUrl: String, token: String?, lastId: Int? = nil) async throws -> [ChatMessage] {

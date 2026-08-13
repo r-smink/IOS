@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E1A2B3C4D5E6F7A8B9C0D1E2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7A8B9C0D1E3 /* AppDelegate.swift */; };
 		1E47D89686AE45DDE9D899BC /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1D05EEB1800749A90FA931 /* Models.swift */; };
 		1E4D5945EBF6F43823FBB32D /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1F4BBAF6E2D003AD8B83A6 /* Formatting.swift */; };
 		29BF0E01871F62DBA9D4AAC0 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8A3F35B0E6DEE1FFDD5E6D /* Storage.swift */; };
@@ -25,6 +26,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E1A2B3C4D5E6F7A8B9C0D1E3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0F93CFA56C5683038F1BC4F9 /* WerkRoosterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WerkRoosterApp.swift; sourceTree = "<group>"; };
 		3524F0BCC2971324951D2388 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		4B28B94D7B6554FDBA8EAA7F /* ScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleView.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 		941C4BAA9F8D6D4A70B25767 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E1A2B3C4D5E6F7A8B9C0D1E3 /* AppDelegate.swift */,
 				F7DF87D5383A2D9EF46242D5 /* AppViewModel.swift */,
 				AC2F8C3DC6B53C3CA32269BF /* ContentView.swift */,
 				0F93CFA56C5683038F1BC4F9 /* WerkRoosterApp.swift */,
@@ -167,6 +170,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1A2B3C4D5E6F7A8B9C0D1E2 /* AppDelegate.swift in Sources */,
 				D00FBAE05743B903E68819E7 /* APIClient.swift in Sources */,
 				B4E3B918203C1433E3D911D0 /* AppViewModel.swift in Sources */,
 				737CDF1C69BA98A5D42AEAF4 /* AvailabilityView.swift in Sources */,

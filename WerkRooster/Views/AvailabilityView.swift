@@ -76,8 +76,13 @@ struct AvailabilityView: View {
             .font(.caption2)
             .foregroundStyle(.secondary)
 
-            if vm.locationId == 0 {
+            if !vm.hasLocations {
                 Text("Geen locatie gekoppeld aan je account.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else if (vm.me?.locations?.count ?? 0) > 1 {
+                Text("Je beschikbaarheid geldt voor al je locaties.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)

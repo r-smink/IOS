@@ -7,6 +7,8 @@ final class AppViewModel: ObservableObject {
         case dashboard
         case schedule
         case availability
+        case swaps
+        case timeoff
         case profile
         case chat
         case sick
@@ -19,6 +21,8 @@ final class AppViewModel: ObservableObject {
             case .dashboard: return "Dashboard"
             case .schedule: return "Rooster"
             case .availability: return "Beschikbaarheid"
+            case .swaps: return "Ruilen"
+            case .timeoff: return "Verlof"
             case .profile: return "Mijn Profiel"
             case .chat: return "Chat"
             case .sick: return "Ziek melden"
@@ -31,6 +35,8 @@ final class AppViewModel: ObservableObject {
             case .dashboard: return "square.grid.2x2"
             case .schedule: return "calendar"
             case .availability: return "checkmark.circle"
+            case .swaps: return "arrow.2.squarepath"
+            case .timeoff: return "beach.umbrella"
             case .profile: return "person"
             case .chat: return "bubble.left.and.bubble.right"
             case .sick: return "cross.case"
@@ -53,6 +59,14 @@ final class AppViewModel: ObservableObject {
     @Published var currentDest: Dest = .dashboard
     @Published var selectedMonth: Date = Date()
     @Published var teamPhoneContacts: [TeamPhoneContact] = []
+    @Published var swapMyShifts: [SwapShift] = []
+    @Published var swapAvailable: [SwapShift] = []
+    @Published var swapIncoming: [SwapRequestItem] = []
+    @Published var swapMine: [SwapRequestItem] = []
+    @Published var swapColleagues: [Colleague] = []
+    @Published var swapStatus: String?
+    @Published var timeoffItems: [TimeoffItem] = []
+    @Published var timeoffStatus: String?
 
     private let storage = Storage()
     private let api = APIClient()
@@ -66,6 +80,10 @@ final class AppViewModel: ObservableObject {
 
     var locationId: Int {
         me?.locations?.first?.id ?? 0
+    }
+
+    var hasLocations: Bool {
+        !(me?.locations?.isEmpty ?? true)
     }
 
     var currentUserId: Int {
@@ -168,14 +186,15 @@ final class AppViewModel: ObservableObject {
     }
 
     func loadAvailability(for monthString: String) async {
-        guard let config, locationId != 0 else { return }
+        guard let config, hasLocations else { return }
         loading = true
         availabilityStatus = nil
         defer { loading = false }
 
         do {
+            // locationId = nil → server aggregates across all assigned locations
             let response = try await authorized {
-                try await api.availability(baseUrl: config.baseUrl, token: self.config?.accessToken, month: monthString, locationId: self.locationId)
+                try await api.availability(baseUrl: config.baseUrl, token: self.config?.accessToken, month: monthString, locationId: nil)
             }
 
             var map = buildMonthDefaults(monthString: monthString)
@@ -195,18 +214,26 @@ final class AppViewModel: ObservableObject {
             }
             availabilityEntries = map
             availabilitySubmittedDates = submitted
+
+            // Use shifts from the aggregated response (covers all assigned locations)
+            if let responseShifts = response.shifts, !responseShifts.isEmpty {
+                shifts = responseShifts.map { s in
+                    Shift(id: s.id, locationId: s.locationId, name: s.name, startTime: s.startTime, endTime: s.endTime, color: s.color)
+                }
+            }
         } catch {
             availabilityStatus = "Kon beschikbaarheid niet laden"
         }
     }
 
     func saveAvailability() async {
-        guard let config, locationId != 0 else { return }
+        guard let config, hasLocations else { return }
         loading = true
         defer { loading = false }
 
         do {
-            let body = AvailabilityUpsertRequest(locationId: locationId, entries: Array(availabilityEntries.values))
+            // locationId = nil → server writes to all assigned locations
+            let body = AvailabilityUpsertRequest(locationId: nil, entries: Array(availabilityEntries.values))
             _ = try await authorized {
                 try await api.upsertAvailability(baseUrl: config.baseUrl, token: self.config?.accessToken, body: body)
             } as Void
@@ -314,6 +341,14 @@ final class AppViewModel: ObservableObject {
 
         if dest == .availability {
             Task { await loadAvailability(for: monthString(from: selectedMonth)) }
+        }
+
+        if dest == .swaps {
+            Task { await loadSwapData() }
+        }
+
+        if dest == .timeoff {
+            Task { await loadTimeoff() }
         }
     }
 
@@ -440,6 +475,106 @@ final class AppViewModel: ObservableObject {
         storage.saveConfig(cfg)
     }
 
+    // MARK: - Shift swaps
+
+    func loadSwapData() async {
+        guard let config else { return }
+        swapStatus = nil
+        do {
+            let my = try await authorized { try await api.swapsMyShifts(baseUrl: config.baseUrl, token: self.config?.accessToken) }
+            swapMyShifts = my.shifts
+            let avail = try await authorized { try await api.swapsAvailable(baseUrl: config.baseUrl, token: self.config?.accessToken) }
+            swapAvailable = avail.shifts
+            let reqs = try await authorized { try await api.swapsRequests(baseUrl: config.baseUrl, token: self.config?.accessToken) }
+            swapIncoming = reqs.incoming
+            swapMine = reqs.mine
+            let cols = try await authorized { try await api.swapsColleagues(baseUrl: config.baseUrl, token: self.config?.accessToken) }
+            swapColleagues = cols.colleagues
+        } catch {
+            swapStatus = "Kon ruilgegevens niet laden"
+        }
+    }
+
+    func toggleSwappable(scheduleId: Int) async {
+        guard let config else { return }
+        do {
+            let resp = try await authorized {
+                try await api.toggleSwappable(baseUrl: config.baseUrl, token: self.config?.accessToken, scheduleId: scheduleId)
+            }
+            swapStatus = resp.message
+            await loadSwapData()
+        } catch {
+            swapStatus = "Kon ruilbaar-status niet wijzigen"
+        }
+    }
+
+    func requestSwap(scheduleId: Int, colleagueId: Int?, reason: String?) async {
+        guard let config else { return }
+        do {
+            _ = try await authorized {
+                try await api.requestSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, body: RequestSwapBody(scheduleId: scheduleId, requestedEmployeeId: colleagueId, reason: reason))
+            } as Void
+            swapStatus = "Ruilverzoek ingediend"
+            await loadSwapData()
+        } catch {
+            swapStatus = "Ruilverzoek indienen mislukt"
+        }
+    }
+
+    func respondSwap(swapId: Int, action: String) async {
+        guard let config else { return }
+        do {
+            _ = try await authorized {
+                try await api.respondSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, swapId: swapId, action: action)
+            } as Void
+            swapStatus = action == "accept" ? "Verzoek geaccepteerd" : "Verzoek afgewezen"
+            await loadSwapData()
+        } catch {
+            swapStatus = "Kon niet reageren op verzoek"
+        }
+    }
+
+    func claimShift(scheduleId: Int) async {
+        guard let config else { return }
+        do {
+            _ = try await authorized {
+                try await api.claimSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, scheduleId: scheduleId)
+            } as Void
+            swapStatus = "Dienst overgenomen"
+            await loadSwapData()
+        } catch {
+            swapStatus = "Dienst overnemen mislukt"
+        }
+    }
+
+    // MARK: - Time off (verlof)
+
+    func loadTimeoff() async {
+        guard let config else { return }
+        timeoffStatus = nil
+        do {
+            let resp = try await authorized {
+                try await api.timeoff(baseUrl: config.baseUrl, token: self.config?.accessToken)
+            }
+            timeoffItems = resp.items
+        } catch {
+            timeoffStatus = "Kon verlofaanvragen niet laden"
+        }
+    }
+
+    func submitTimeoff(startDate: String, endDate: String, type: String, reason: String?) async {
+        guard let config else { return }
+        do {
+            _ = try await authorized {
+                try await api.submitTimeoff(baseUrl: config.baseUrl, token: self.config?.accessToken, body: TimeoffRequestBody(startDate: startDate, endDate: endDate, type: type, reason: reason))
+            } as Void
+            timeoffStatus = "Aanvraag verzonden!"
+            await loadTimeoff()
+        } catch {
+            timeoffStatus = "Aanvraag indienen mislukt"
+        }
+    }
+
     private func clearSession() {
         config = nil
         me = nil
@@ -450,6 +585,14 @@ final class AppViewModel: ObservableObject {
         availabilityEntries = [:]
         availabilitySubmittedDates = []
         teamPhoneContacts = []
+        swapMyShifts = []
+        swapAvailable = []
+        swapIncoming = []
+        swapMine = []
+        swapColleagues = []
+        swapStatus = nil
+        timeoffItems = []
+        timeoffStatus = nil
         storage.clear()
         error = nil
         loading = false
