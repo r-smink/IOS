@@ -57,6 +57,25 @@ final class APIClient {
         ])
     }
 
+    func monthStatus(baseUrl: String, token: String?, month: String, locationId: Int?) async throws -> MonthStatusResponse {
+        var query: [URLQueryItem] = [URLQueryItem(name: "month", value: month)]
+        if let locationId, locationId > 0 {
+            query.append(URLQueryItem(name: "location_id", value: "\(locationId)"))
+        }
+        return try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/schedules/month-status", method: "GET", token: token, query: query)
+    }
+
+    func fullSchedules(baseUrl: String, token: String?, startDate: String, endDate: String, locationId: Int?) async throws -> [ScheduleItem] {
+        var query: [URLQueryItem] = [
+            URLQueryItem(name: "start_date", value: startDate),
+            URLQueryItem(name: "end_date", value: endDate)
+        ]
+        if let locationId, locationId > 0 {
+            query.append(URLQueryItem(name: "location_id", value: "\(locationId)"))
+        }
+        return try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/schedules/full", method: "GET", token: token, query: query)
+    }
+
     func notifications(baseUrl: String, token: String?) async throws -> [NotificationItem] {
         try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/notifications", method: "GET", token: token, query: [
             URLQueryItem(name: "limit", value: "50"),

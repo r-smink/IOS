@@ -69,9 +69,9 @@ struct AvailabilityView: View {
             }
 
             HStack(spacing: 12) {
-                LegendDot(color: Color.green.opacity(0.2), label: "Ingediend")
+                LegendDot(color: Color.green.opacity(0.35), label: "Beschikbaar")
                 LegendDot(color: Color.red.opacity(0.3), label: "Niet beschikbaar")
-                LegendDot(color: Color(.secondarySystemBackground).opacity(0.6), label: "Nog doorgeven")
+                LegendDot(color: Color.green.opacity(0.2), label: "Ingediend")
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
@@ -106,10 +106,13 @@ struct AvailabilityView: View {
         if !entry.isAvailable {
             return isSubmitted ? Color.red.opacity(0.3) : Color.red.opacity(0.12)
         }
+        if entry.shiftPreference != nil {
+            return Color.green.opacity(0.35)
+        }
         if isSubmitted {
             return Color.green.opacity(0.2)
         }
-        return Color(.secondarySystemBackground).opacity(0.6)
+        return Color.green.opacity(0.1)
     }
 }
 
@@ -148,8 +151,8 @@ private struct EditAvailabilitySheet: View {
                             Text(shift.name).tag(shift.id)
                         }
                     }
-                    TextField("Start (HH:mm)", text: Binding(get: { entry.customStart ?? "" }, set: { entry.customStart = $0.isEmpty ? nil : $0 }))
-                    TextField("Eind (HH:mm)", text: Binding(get: { entry.customEnd ?? "" }, set: { entry.customEnd = $0.isEmpty ? nil : $0 }))
+                    TextField("Start (HH:mm)", text: Binding(get: { entry.customStart ?? "" }, set: { entry.customStart = $0.isEmpty ? nil : $0.roundedTo30Min }))
+                    TextField("Eind (HH:mm)", text: Binding(get: { entry.customEnd ?? "" }, set: { entry.customEnd = $0.isEmpty ? nil : $0.roundedTo30Min }))
                     TextField("Opmerking", text: Binding(get: { entry.notes ?? "" }, set: { entry.notes = $0.isEmpty ? nil : $0 }), axis: .vertical)
                 }
             }

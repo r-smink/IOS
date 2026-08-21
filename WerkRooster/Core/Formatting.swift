@@ -2,6 +2,37 @@ import Foundation
 import SwiftUI
 
 extension String {
+    var roundedTo30Min: String {
+        let parts = split(separator: ":").map { Int($0) }
+        guard parts.count == 2,
+              let hours = parts[0], hours >= 0, hours < 24,
+              let minutes = parts[1], minutes >= 0, minutes < 60 else {
+            return self
+        }
+        let totalMinutes = hours * 60 + minutes
+        let rounded = ((totalMinutes + 15) / 30) * 30 % (24 * 60)
+        let newHours = rounded / 60
+        let newMinutes = rounded % 60
+        return String(format: "%02d:%02d", newHours, newMinutes)
+    }
+
+    var toMonthStart: String? {
+        return self + "-01"
+    }
+
+    var toMonthEnd: String? {
+        let parts = split(separator: "-")
+        guard parts.count == 2,
+              let year = Int(parts[0]),
+              let month = Int(parts[1]),
+              let date = Calendar.current.date(from: DateComponents(year: year, month: month)) else {
+            return nil
+        }
+        let range = Calendar.current.range(of: .day, in: .month, for: date)
+        guard let lastDay = range?.last else { return nil }
+        return String(format: "%04d-%02d-%02d", year, month, lastDay)
+    }
+
     var hhmm: String {
         if count >= 5 { return String(prefix(5)) }
         return self

@@ -11,38 +11,55 @@ struct ScheduleView: View {
         var id: String { rawValue }
     }
 
+    private var activeSchedules: [ScheduleItem] {
+        vm.scheduleFilter == .full ? vm.fullSchedules : vm.schedules
+    }
+
+    private var monthString: String {
+        vm.monthString(from: monthDate)
+    }
+
     var body: some View {
         VStack(spacing: 12) {
+            Picker("Filter", selection: $vm.scheduleFilter) {
+                ForEach(AppViewModel.ScheduleFilter.allCases) { filter in
+                    Text(filter.rawValue).tag(filter)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            if vm.scheduleFilter == .full, let locations = vm.me?.locations, locations.count > 1 {
+                Picker("Locatie", selection: $vm.selectedScheduleLocationId) {
+                    ForEach(locations) { location in
+                        Text(location.name).tag(Optional(location.id))
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: vm.selectedScheduleLocationId) { _ in
+                    Task { await reload() }
+                }
+            }
+
             Picker("Mode", selection: $mode) {
                 Text("Lijst").tag(Mode.list)
                 Text("Kalender").tag(Mode.calendar)
             }
             .pickerStyle(.segmented)
 
-            if mode == .list {
-                Button("Vernieuw rooster") {
-                    Task { await vm.refreshSchedules() }
-                }
-                .buttonStyle(.borderedProminent)
-                .frame(maxWidth: .infinity)
+            MonthHeader(monthDate: $monthDate) { _ in
+                Task { await reload() }
+            }
 
-                List(vm.schedules) { item in
+            if vm.scheduleFilter == .full, !(vm.monthStatus?.isFinalized ?? false) {
+                NotFinalizedCard(month: monthString)
+            } else if mode == .list {
+                List(activeSchedules) { item in
                     ScheduleCard(item: item)
                         .listRowSeparator(.hidden)
                 }
                 .listStyle(.plain)
             } else {
-                MonthHeader(monthDate: $monthDate) { changed in
-                    let start = changed.startOfMonth.isoDate
-                    let end = changed.endOfMonth.isoDate
-                    Task { await vm.loadSchedules(start: start, end: end) }
-                }
-                ScheduleCalendar(monthDate: monthDate, schedules: vm.schedules)
-                    .task {
-                        let start = monthDate.startOfMonth.isoDate
-                        let end = monthDate.endOfMonth.isoDate
-                        await vm.loadSchedules(start: start, end: end)
-                    }
+                ScheduleCalendar(monthDate: monthDate, schedules: activeSchedules)
                 HStack(spacing: 10) {
                     ScheduleLegendDot(color: .blue, label: "Gepland")
                     ScheduleLegendDot(color: .green, label: "Voltooid")
@@ -54,19 +71,75 @@ struct ScheduleView: View {
             }
         }
         .padding(.horizontal)
+        .task {
+            await reload()
+        }
+        .onChange(of: vm.scheduleFilter) { _ in
+            Task { await reload() }
+        }
+    }
+
+    private func reload() async {
+        let month = monthString
+        if vm.scheduleFilter == .full {
+            await vm.loadMonthStatus(month: month)
+            if vm.monthStatus?.isFinalized == true {
+                await vm.loadFullSchedules(month: month)
+            } else {
+                vm.fullSchedules = []
+            }
+        } else {
+            let start = monthDate.startOfMonth.isoDate
+            let end = monthDate.endOfMonth.isoDate
+            await vm.loadSchedules(start: start, end: end)
+        }
+    }
+}
+
+private struct NotFinalizedCard: View {
+    let month: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Label("Rooster nog niet definitief", systemImage: "hourglass")
+                .font(.headline)
+            Text("Het rooster voor \(month) is nog niet definitief gemaakt door de planner.")
+                .font(.body)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemBackground).opacity(0.5))
+        .cornerRadius(12)
     }
 }
 
 private struct ScheduleCard: View {
     let item: ScheduleItem
 
+    private var effectiveStart: String { item.startTime ?? item.shiftStartTime ?? "" }
+    private var effectiveEnd: String { item.endTime ?? item.shiftEndTime ?? "" }
+    private var isCustomTime: Bool {
+        (item.startTime != nil && item.startTime != item.shiftStartTime) ||
+        (item.endTime != nil && item.endTime != item.shiftEndTime)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(item.shiftName ?? "Dienst").font(.headline)
+            if let employee = item.employeeName, !employee.isEmpty {
+                Text(employee).font(.subheadline).fontWeight(.medium)
+            }
             Text(item.locationName ?? "").font(.subheadline)
             Text(item.workDate).font(.caption)
-            if let start = item.startTime, let end = item.endTime {
-                Text("\(start.hhmm) - \(end.hhmm)").foregroundStyle(.blue)
+            if !effectiveStart.isEmpty && !effectiveEnd.isEmpty {
+                Text("\(effectiveStart.hhmm) - \(effectiveEnd.hhmm)").foregroundStyle(.blue)
+            }
+            if isCustomTime {
+                Text("Aangepast: \(effectiveStart.hhmm) - \(effectiveEnd.hhmm)")
+                    .font(.caption)
+                    .foregroundStyle(.teal)
+                    .fontWeight(.medium)
             }
             if let notes = item.notes, !notes.isEmpty {
                 Text(notes).font(.caption).foregroundStyle(.secondary)

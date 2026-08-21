@@ -157,10 +157,15 @@ struct ScheduleItem: Codable, Identifiable, Hashable {
     let color: String?
     let locationId: Int?
     let locationName: String?
+    let employeeId: Int?
+    let employeeName: String?
+    let shiftStartTime: String?
+    let shiftEndTime: String?
 
     enum CodingKeys: String, CodingKey {
         case id, workDate, startTime, endTime, status, notes, isSwappable
         case actualStartTime, actualEndTime, breakMinutes, shiftId, shiftName, color, locationId, locationName
+        case employeeId, employeeName, shiftStartTime, shiftEndTime
     }
 
     init(from decoder: Decoder) throws {
@@ -180,6 +185,10 @@ struct ScheduleItem: Codable, Identifiable, Hashable {
         color = try container.decodeIfPresent(String.self, forKey: .color)
         locationId = try container.decodeFlexibleIntIfPresent(forKey: .locationId)
         locationName = try container.decodeIfPresent(String.self, forKey: .locationName)
+        employeeId = try container.decodeFlexibleIntIfPresent(forKey: .employeeId)
+        employeeName = try container.decodeIfPresent(String.self, forKey: .employeeName)
+        shiftStartTime = try container.decodeIfPresent(String.self, forKey: .shiftStartTime)
+        shiftEndTime = try container.decodeIfPresent(String.self, forKey: .shiftEndTime)
     }
 }
 
@@ -528,7 +537,28 @@ struct ToggleSwappableResponse: Codable {
     let message: String?
 }
 
-// MARK: - Time off (verlof) models
+// MARK: - Full roster / month status
+
+struct MonthStatusResponse: Codable {
+    let isFinalized: Bool
+    let finalizedAt: String?
+    let finalizedBy: String?
+    let locationId: Int?
+    let month: String?
+
+    enum CodingKeys: String, CodingKey {
+        case isFinalized, finalizedAt, finalizedBy, locationId, month
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isFinalized = try container.decode(Bool.self, forKey: .isFinalized)
+        finalizedAt = try container.decodeIfPresent(String.self, forKey: .finalizedAt)
+        finalizedBy = try container.decodeIfPresent(String.self, forKey: .finalizedBy)
+        locationId = try? container.decodeFlexibleIntIfPresent(forKey: .locationId)
+        month = try container.decodeIfPresent(String.self, forKey: .month)
+    }
+}
 
 struct TimeoffItem: Codable, Identifiable, Hashable {
     let id: Int

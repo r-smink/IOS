@@ -3,6 +3,12 @@ import UIKit
 
 @MainActor
 final class AppViewModel: ObservableObject {
+    enum ScheduleFilter: String, CaseIterable, Identifiable {
+        case personal = "Mijn rooster"
+        case full = "Volledig rooster"
+        var id: String { rawValue }
+    }
+
     enum Dest: String, CaseIterable, Identifiable {
         case dashboard
         case schedule
@@ -48,6 +54,10 @@ final class AppViewModel: ObservableObject {
     @Published var config: AuthConfig?
     @Published var me: MeResponse?
     @Published var schedules: [ScheduleItem] = []
+    @Published var fullSchedules: [ScheduleItem] = []
+    @Published var monthStatus: MonthStatusResponse?
+    @Published var scheduleFilter: ScheduleFilter = .personal
+    @Published var selectedScheduleLocationId: Int?
     @Published var notifications: [NotificationItem] = []
     @Published var chatMessages: [ChatMessage] = []
     @Published var shifts: [Shift] = []
@@ -156,6 +166,29 @@ final class AppViewModel: ObservableObject {
         do {
             schedules = try await authorized {
                 try await api.schedules(baseUrl: config.baseUrl, token: self.config?.accessToken, startDate: start, endDate: end)
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    func loadMonthStatus(month: String) async {
+        guard let config else { return }
+        do {
+            monthStatus = try await authorized {
+                try await api.monthStatus(baseUrl: config.baseUrl, token: self.config?.accessToken, month: month, locationId: selectedScheduleLocationId)
+            }
+        } catch {
+            monthStatus = nil
+            self.error = error.localizedDescription
+        }
+    }
+
+    func loadFullSchedules(month: String) async {
+        guard let config, let start = month.toMonthStart(), let end = month.toMonthEnd() else { return }
+        do {
+            fullSchedules = try await authorized {
+                try await api.fullSchedules(baseUrl: config.baseUrl, token: self.config?.accessToken, startDate: start, endDate: end, locationId: selectedScheduleLocationId)
             }
         } catch {
             self.error = error.localizedDescription
@@ -417,6 +450,7 @@ final class AppViewModel: ObservableObject {
             me = try await authorized {
                 try await api.me(baseUrl: config.baseUrl, token: self.config?.accessToken)
             }
+            selectedScheduleLocationId = me?.locations?.first?.id
         } catch APIError.unauthorized {
             self.error = "Sessie verlopen, log opnieuw in."
             clearSession()
