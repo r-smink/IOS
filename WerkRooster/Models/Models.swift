@@ -311,6 +311,15 @@ struct Shift: Codable, Identifiable, Hashable {
         endTime = try container.decodeIfPresent(String.self, forKey: .endTime)
         color = try container.decodeIfPresent(String.self, forKey: .color)
     }
+
+    init(id: Int, locationId: Int?, name: String, startTime: String?, endTime: String?, color: String?) {
+        self.id = id
+        self.locationId = locationId
+        self.name = name
+        self.startTime = startTime
+        self.endTime = endTime
+        self.color = color
+    }
 }
 
 struct ChatMessage: Codable, Identifiable, Hashable {

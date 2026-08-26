@@ -9,12 +9,23 @@ settings:
     PRODUCT_BUNDLE_IDENTIFIER: com.roosterplanner.ios
     IPHONEOS_DEPLOYMENT_TARGET: 16.0
     SWIFT_VERSION: 5.0
+
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: "11.0.0"
+
 targets:
   WerkRooster:
     type: application
     platform: iOS
     sources:
       - path: WerkRooster
+    dependencies:
+      - package: Firebase
+        product: FirebaseCore
+      - package: Firebase
+        product: FirebaseMessaging
     settings:
       base:
         INFOPLIST_KEY_CFBundleDisplayName: WerkRooster

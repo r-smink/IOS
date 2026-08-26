@@ -185,7 +185,7 @@ final class AppViewModel: ObservableObject {
     }
 
     func loadFullSchedules(month: String) async {
-        guard let config, let start = month.toMonthStart(), let end = month.toMonthEnd() else { return }
+        guard let config, let start = month.toMonthStart, let end = month.toMonthEnd else { return }
         do {
             fullSchedules = try await authorized {
                 try await api.fullSchedules(baseUrl: config.baseUrl, token: self.config?.accessToken, startDate: start, endDate: end, locationId: selectedScheduleLocationId)
