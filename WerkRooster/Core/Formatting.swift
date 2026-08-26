@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 extension String {
-    var roundedTo30Min: String {
+    var roundedTo15Min: String {
         let parts = split(separator: ":").map { Int($0) }
         guard parts.count == 2,
               let hours = parts[0], hours >= 0, hours < 24,
@@ -10,7 +10,7 @@ extension String {
             return self
         }
         let totalMinutes = hours * 60 + minutes
-        let rounded = ((totalMinutes + 15) / 30) * 30 % (24 * 60)
+        let rounded = ((totalMinutes + 7) / 15) * 15 % (24 * 60)
         let newHours = rounded / 60
         let newMinutes = rounded % 60
         return String(format: "%02d:%02d", newHours, newMinutes)

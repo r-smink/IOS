@@ -151,8 +151,8 @@ private struct EditAvailabilitySheet: View {
                             Text(shift.name).tag(shift.id)
                         }
                     }
-                    TextField("Start (HH:mm)", text: Binding(get: { entry.customStart ?? "" }, set: { entry.customStart = $0.isEmpty ? nil : $0.roundedTo30Min }))
-                    TextField("Eind (HH:mm)", text: Binding(get: { entry.customEnd ?? "" }, set: { entry.customEnd = $0.isEmpty ? nil : $0.roundedTo30Min }))
+                    TextField("Start (HH:mm)", text: Binding(get: { entry.customStart ?? "" }, set: { entry.customStart = $0.isEmpty ? nil : $0.roundedTo15Min }))
+                    TextField("Eind (HH:mm)", text: Binding(get: { entry.customEnd ?? "" }, set: { entry.customEnd = $0.isEmpty ? nil : $0.roundedTo15Min }))
                     TextField("Opmerking", text: Binding(get: { entry.notes ?? "" }, set: { entry.notes = $0.isEmpty ? nil : $0 }), axis: .vertical)
                 }
             }
