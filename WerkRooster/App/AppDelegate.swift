@@ -27,6 +27,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
     
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        print("[DEBUG] APNS token received, setting on Messaging")
         Messaging.messaging().apnsToken = deviceToken
     }
     
@@ -40,10 +41,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         guard let token = fcmToken else { return }
         print("FCM Token: \(token)")
         
-        // Send token to your backend
-        Task {
-            await sendFCMTokenToBackend(token)
-        }
+        UserDefaults.standard.set(token, forKey: "fcm_token")
+        
+        NotificationCenter.default.post(name: .fcmTokenReceived, object: token)
     }
     
     private func sendFCMTokenToBackend(_ token: String) async {
@@ -58,7 +58,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler([.banner, .badge, .sound])
     }
     
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, completionHandler: @escaping () -> Void) {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
         handleNotificationTap(userInfo)
         completionHandler()

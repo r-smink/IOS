@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import FirebaseMessaging
 
 @MainActor
 final class AppViewModel: ObservableObject {
@@ -392,6 +393,7 @@ final class AppViewModel: ObservableObject {
     func registerFCMToken(_ token: String) async {
         guard let config else {
             pendingFCMToken = token
+            print("[DEBUG] registerFCMToken: no config, saved as pending")
             return
         }
         do {
@@ -399,7 +401,9 @@ final class AppViewModel: ObservableObject {
                 try await api.registerDevice(baseUrl: config.baseUrl, token: self.config?.accessToken, fcmToken: token)
             } as Void
             pendingFCMToken = nil
+            print("[DEBUG] FCM token registered successfully")
         } catch {
+            print("[DEBUG] FCM token registration failed: \(error)")
             pendingFCMToken = token
         }
     }
@@ -466,8 +470,9 @@ final class AppViewModel: ObservableObject {
         // Fetch team phone numbers
         await fetchTeamPhone()
 
-        // Register pending FCM token if available
-        if let fcmToken = pendingFCMToken {
+        // Register FCM token with backend (from UserDefaults or pending)
+        let savedToken = pendingFCMToken ?? UserDefaults.standard.string(forKey: "fcm_token")
+        if let fcmToken = savedToken {
             await registerFCMToken(fcmToken)
         }
 

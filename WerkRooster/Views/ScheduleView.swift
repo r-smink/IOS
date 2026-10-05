@@ -134,8 +134,10 @@ private struct ScheduleCard: View {
             Text(item.workDate).font(.caption)
             if !effectiveStart.isEmpty && !effectiveEnd.isEmpty {
                 Text("\(effectiveStart.hhmm) - \(effectiveEnd.hhmm)").foregroundStyle(.blue)
+            } else {
+                Text("Flexibel").font(.subheadline).foregroundStyle(.secondary)
             }
-            if isCustomTime {
+            if isCustomTime && !effectiveStart.isEmpty && !effectiveEnd.isEmpty {
                 Text("Aangepast: \(effectiveStart.hhmm) - \(effectiveEnd.hhmm)")
                     .font(.caption)
                     .foregroundStyle(.teal)

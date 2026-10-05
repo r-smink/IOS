@@ -130,9 +130,15 @@ private struct LegendDot: View {
     }
 }
 
+private enum TimeField: Identifiable {
+    case start, end
+    var id: Int { hashValue }
+}
+
 private struct EditAvailabilitySheet: View {
     @Environment(\.dismiss) private var dismiss
     @State var entry: AvailabilityEntryRequest
+    @State private var editingTime: TimeField?
     let shifts: [Shift]
     let onSave: (AvailabilityEntryRequest) -> Void
 
@@ -151,8 +157,28 @@ private struct EditAvailabilitySheet: View {
                             Text(shift.name).tag(shift.id)
                         }
                     }
-                    TextField("Start (HH:mm)", text: Binding(get: { entry.customStart ?? "" }, set: { entry.customStart = $0.isEmpty ? nil : $0.roundedTo15Min }))
-                    TextField("Eind (HH:mm)", text: Binding(get: { entry.customEnd ?? "" }, set: { entry.customEnd = $0.isEmpty ? nil : $0.roundedTo15Min }))
+                    Button {
+                        editingTime = .start
+                    } label: {
+                        HStack {
+                            Text("Start")
+                            Spacer()
+                            Text(entry.customStart ?? "--:--")
+                                .foregroundStyle(entry.customStart == nil ? .secondary : .primary)
+                        }
+                    }
+                    .tint(.primary)
+                    Button {
+                        editingTime = .end
+                    } label: {
+                        HStack {
+                            Text("Eind")
+                            Spacer()
+                            Text(entry.customEnd ?? "--:--")
+                                .foregroundStyle(entry.customEnd == nil ? .secondary : .primary)
+                        }
+                    }
+                    .tint(.primary)
                     TextField("Opmerking", text: Binding(get: { entry.notes ?? "" }, set: { entry.notes = $0.isEmpty ? nil : $0 }), axis: .vertical)
                 }
             }
@@ -171,6 +197,84 @@ private struct EditAvailabilitySheet: View {
                     }
                 }
             }
+            .sheet(item: $editingTime) { field in
+                TimeWheelPickerSheet(
+                    title: field == .start ? "Starttijd" : "Eindtijd",
+                    time: field == .start ? $entry.customStart : $entry.customEnd
+                )
+                .presentationDetents([.fraction(0.35)])
+            }
         }
+    }
+}
+
+private struct TimeWheelPickerSheet: View {
+    let title: String
+    @Binding var time: String?
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var hour: Int
+    @State private var minuteIndex: Int
+
+    private let minutes = [0, 30]
+
+    init(title: String, time: Binding<String?>) {
+        self.title = title
+        self._time = time
+        let parts = (time.wrappedValue ?? "").split(separator: ":")
+        let parsedHour = parts.count > 0 ? Int(parts[0]) : nil
+        let parsedMinute = parts.count > 1 ? Int(parts[1]) : nil
+        _hour = State(initialValue: (parsedHour ?? 9).clamped(to: 0...23))
+        _minuteIndex = State(initialValue: (parsedMinute ?? 0) >= 30 ? 1 : 0)
+    }
+
+    var body: some View {
+        NavigationStack {
+            HStack(spacing: 0) {
+                Picker("Uur", selection: $hour) {
+                    ForEach(0..<24, id: \.self) { h in
+                        Text(String(format: "%02d", h)).tag(h)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+
+                Text(":").font(.title2)
+
+                Picker("Minuut", selection: $minuteIndex) {
+                    ForEach(0..<minutes.count, id: \.self) { i in
+                        Text(String(format: "%02d", minutes[i])).tag(i)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+            }
+            .labelsHidden()
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuleren") { dismiss() }
+                }
+                ToolbarItem(placement: .destructiveAction) {
+                    Button("Wissen") {
+                        time = nil
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") {
+                        time = String(format: "%02d:%02d", hour, minutes[minuteIndex])
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private extension Int {
+    func clamped(to range: ClosedRange<Int>) -> Int {
+        min(max(self, range.lowerBound), range.upperBound)
     }
 }
