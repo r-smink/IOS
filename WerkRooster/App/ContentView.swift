@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
     @EnvironmentObject private var vm: AppViewModel
@@ -50,7 +51,12 @@ private struct MainShellView: View {
         }
         .onChange(of: vm.currentDest) { _ in
             vm.ensureChatConnected()
-        }        
+        }
+        .simultaneousGesture(
+            TapGesture().onEnded {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+        )
     }
 
     @ViewBuilder

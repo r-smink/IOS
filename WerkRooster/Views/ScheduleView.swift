@@ -239,7 +239,7 @@ private struct ScheduleCalendar: View {
             }
 
             LazyVGrid(columns: columns, spacing: 8) {
-                ForEach(0..<monthDate.leadingWeekdayOffset, id: \.self) { _ in
+                ForEach((0..<monthDate.leadingWeekdayOffset).map { "empty-\($0)" }, id: \.self) { _ in
                     Color.clear.frame(height: 38)
                 }
                 ForEach(1...monthDate.daysInMonth, id: \.self) { day in

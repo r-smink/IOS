@@ -22,7 +22,7 @@ struct AvailabilityView: View {
             }
 
             LazyVGrid(columns: columns, spacing: 8) {
-                ForEach(0..<monthDate.leadingWeekdayOffset, id: \.self) { _ in
+                ForEach((0..<monthDate.leadingWeekdayOffset).map { "empty-\($0)" }, id: \.self) { _ in
                     Color.clear.frame(height: 40)
                 }
                 ForEach(1...monthDate.daysInMonth, id: \.self) { day in
@@ -183,6 +183,7 @@ private struct EditAvailabilitySheet: View {
                 }
             }
             .navigationTitle("Beschikbaarheid \(entry.date)")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuleren") { dismiss() }

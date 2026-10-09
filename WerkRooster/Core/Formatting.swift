@@ -49,6 +49,15 @@ extension String {
 }
 
 extension Date {
+    private static var calendarOnlyFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }
+
     var monthTitle: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "nl_NL")
@@ -79,10 +88,7 @@ extension Date {
     }
 
     var isoDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter.string(from: self)
+        Date.calendarOnlyFormatter.string(from: self)
     }
 }
 

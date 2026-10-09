@@ -4,37 +4,31 @@ struct NotificationsView: View {
     @EnvironmentObject private var vm: AppViewModel
 
     var body: some View {
-        VStack(spacing: 12) {
-            Button("Vernieuw meldingen") {
-                Task { await vm.loadNotifications() }
-            }
-            .buttonStyle(.borderedProminent)
-            .frame(maxWidth: .infinity)
-
+        Group {
             if vm.notifications.isEmpty {
                 Text("Geen meldingen").font(.headline)
-                Spacer()
             } else {
-                List(vm.notifications) { n in
+                List(vm.notifications) { notification in
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(n.title).font(.headline)
-                        if let msg = n.message, !msg.isEmpty {
-                            Text(msg)
+                        Text(notification.title).font(.headline)
+                        if let message = notification.message, !message.isEmpty {
+                            Text(message)
                         }
-                        Text(n.createdAt.formattedNotificationDate).font(.caption).foregroundStyle(.secondary)
-                        if n.isRead == 0 {
-                            Button("Markeer gelezen") {
-                                Task { await vm.markNotificationRead(id: n.id) }
-                            }
-                            .buttonStyle(.bordered)
-                        }
+                        Text(notification.createdAt.formattedNotificationDate)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 4)
+                    .task {
+                        if notification.isRead == 0 {
+                            await vm.markNotificationRead(id: notification.id)
+                        }
+                    }
                 }
                 .listStyle(.plain)
+                .refreshable { await vm.loadNotifications() }
             }
         }
-        .padding()
         .task { await vm.loadNotifications() }
     }
 }

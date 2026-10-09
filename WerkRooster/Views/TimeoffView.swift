@@ -15,11 +15,13 @@ struct TimeoffView: View {
         ("other", "Overig")
     ]
 
-    private let isoFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
+    private var duplicateRequestExists: Bool {
+        let start = startDate.isoDate
+        let end = endDate.isoDate
+        return vm.timeoffItems.contains {
+            $0.startDate == start && $0.endDate == end && $0.status != "rejected"
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -43,8 +45,8 @@ struct TimeoffView: View {
                     Button {
                         Task {
                             await vm.submitTimeoff(
-                                startDate: isoFormatter.string(from: startDate),
-                                endDate: isoFormatter.string(from: endDate),
+                                startDate: startDate.isoDate,
+                                endDate: endDate.isoDate,
                                 type: selectedType,
                                 reason: reason.isEmpty ? nil : reason
                             )
@@ -55,7 +57,13 @@ struct TimeoffView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(vm.loading)
+                    .disabled(vm.loading || duplicateRequestExists)
+
+                    if duplicateRequestExists {
+                        Text("Voor deze periode bestaat al een verlofaanvraag.")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                    }
 
                     if let status = vm.timeoffStatus {
                         Text(status)
