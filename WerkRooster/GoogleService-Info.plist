@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.nextbuzz.WerkRooster</string>
+	<string>com.nextbuzz.WerkRoosters</string>
 	<key>PROJECT_ID</key>
 	<string>serva-werkroosters</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:965677013500:ios:259088d52fdc94ca74ba79</string>
+	<string>1:965677013500:ios:8c383006c2a8130374ba79</string>
 </dict>
 </plist>

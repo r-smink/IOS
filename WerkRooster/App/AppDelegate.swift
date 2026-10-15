@@ -29,6 +29,17 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         print("[DEBUG] APNS token received, setting on Messaging")
         Messaging.messaging().apnsToken = deviceToken
+        Messaging.messaging().token { token, error in
+            if let error {
+                print("[DEBUG] FCM token fetch failed: \(error.localizedDescription)")
+                return
+            }
+            guard let token else { return }
+            UserDefaults.standard.set(token, forKey: "fcm_token")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .fcmTokenReceived, object: token)
+            }
+        }
     }
     
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
