@@ -4,6 +4,16 @@ struct AvailabilityView: View {
     @EnvironmentObject private var vm: AppViewModel
     @State private var monthDate = Date()
     @State private var editing: AvailabilityEntryRequest?
+    @State private var mode: Mode = .calendar
+
+    enum Mode {
+        case list
+        case calendar
+    }
+
+    private var sortedEntries: [AvailabilityEntryRequest] {
+        vm.availabilityEntries.values.sorted { $0.date < $1.date }
+    }
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
     private let weekdays = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"]
@@ -15,37 +25,62 @@ struct AvailabilityView: View {
                 Task { await vm.loadAvailability(for: vm.monthString(from: changed)) }
             }
 
-            HStack {
-                ForEach(weekdays, id: \.self) { day in
-                    Text(day).font(.caption.bold()).frame(maxWidth: .infinity)
-                }
+            Picker("Weergave", selection: $mode) {
+                Text("Lijst").tag(Mode.list)
+                Text("Kalender").tag(Mode.calendar)
             }
+            .pickerStyle(.segmented)
 
-            LazyVGrid(columns: columns, spacing: 8) {
-                ForEach((0..<monthDate.leadingWeekdayOffset).map { "empty-\($0)" }, id: \.self) { _ in
-                    Color.clear.frame(height: 40)
-                }
-                ForEach(1...monthDate.daysInMonth, id: \.self) { day in
-                    let key = monthDate.dateFor(day: day).isoDate
-                    let entry = vm.availabilityEntries[key] ?? AvailabilityEntryRequest(date: key, isAvailable: true, shiftPreference: nil, customStart: nil, customEnd: nil, notes: nil)
-                    let isSubmitted = vm.availabilitySubmittedDates.contains(key)
+            if mode == .list {
+                List(sortedEntries) { entry in
                     Button {
                         editing = entry
                     } label: {
-                        VStack(spacing: 3) {
-                            Text("\(day)").font(.caption.bold())
-                            if entry.shiftPreference != nil {
-                                Circle().fill(Color.blue).frame(width: 4, height: 4)
-                            } else if isSubmitted {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 8, weight: .bold))
-                                    .foregroundStyle(.green)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 40)
-                        .background(cellColor(entry, isSubmitted: isSubmitted), in: RoundedRectangle(cornerRadius: 8))
+                        AvailabilityRow(
+                            entry: entry,
+                            shiftName: shiftName(for: entry),
+                            isSubmitted: vm.availabilitySubmittedDates.contains(entry.date),
+                            background: cellColor(entry, isSubmitted: vm.availabilitySubmittedDates.contains(entry.date))
+                        )
                     }
                     .buttonStyle(.plain)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                }
+                .listStyle(.plain)
+            } else {
+                HStack {
+                    ForEach(weekdays, id: \.self) { day in
+                        Text(day).font(.caption.bold()).frame(maxWidth: .infinity)
+                    }
+                }
+
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach((0..<monthDate.leadingWeekdayOffset).map { "empty-\($0)" }, id: \.self) { _ in
+                        Color.clear.frame(height: 40)
+                    }
+                    ForEach(1...monthDate.daysInMonth, id: \.self) { day in
+                        let key = monthDate.dateFor(day: day).isoDate
+                        let entry = vm.availabilityEntries[key] ?? AvailabilityEntryRequest(date: key, isAvailable: true, shiftPreference: nil, customStart: nil, customEnd: nil, notes: nil)
+                        let isSubmitted = vm.availabilitySubmittedDates.contains(key)
+                        Button {
+                            editing = entry
+                        } label: {
+                            VStack(spacing: 3) {
+                                Text("\(day)").font(.caption.bold())
+                                if entry.shiftPreference != nil {
+                                    Circle().fill(Color.blue).frame(width: 4, height: 4)
+                                } else if isSubmitted {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 8, weight: .bold))
+                                        .foregroundStyle(.green)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 40)
+                            .background(cellColor(entry, isSubmitted: isSubmitted), in: RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
 
@@ -68,13 +103,15 @@ struct AvailabilityView: View {
                 Text(status).font(.footnote).foregroundStyle(.secondary)
             }
 
-            HStack(spacing: 12) {
-                LegendDot(color: Color.green.opacity(0.35), label: "Beschikbaar")
-                LegendDot(color: Color.red.opacity(0.3), label: "Niet beschikbaar")
-                LegendDot(color: Color.green.opacity(0.2), label: "Ingediend")
+            if mode == .calendar {
+                HStack(spacing: 12) {
+                    LegendDot(color: Color.green.opacity(0.35), label: "Beschikbaar")
+                    LegendDot(color: Color.red.opacity(0.3), label: "Niet beschikbaar")
+                    LegendDot(color: Color.green.opacity(0.2), label: "Ingediend")
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
 
             if !vm.hasLocations {
                 Text("Geen locatie gekoppeld aan je account.")
@@ -102,6 +139,11 @@ struct AvailabilityView: View {
         }
     }
 
+    private func shiftName(for entry: AvailabilityEntryRequest) -> String? {
+        guard let id = entry.shiftPreference else { return nil }
+        return vm.shifts.first { $0.id == id }?.name
+    }
+
     private func cellColor(_ entry: AvailabilityEntryRequest, isSubmitted: Bool) -> Color {
         if !entry.isAvailable {
             return isSubmitted ? Color.red.opacity(0.3) : Color.red.opacity(0.12)
@@ -113,6 +155,45 @@ struct AvailabilityView: View {
             return Color.green.opacity(0.2)
         }
         return Color.green.opacity(0.1)
+    }
+}
+
+private struct AvailabilityRow: View {
+    let entry: AvailabilityEntryRequest
+    let shiftName: String?
+    let isSubmitted: Bool
+    let background: Color
+
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(entry.date.dutchLongDate).font(.headline)
+                Text(entry.isAvailable ? "Beschikbaar" : "Niet beschikbaar")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(entry.isAvailable ? .green : .red)
+                if entry.isAvailable, let shiftName {
+                    Text("Voorkeur: \(shiftName)").font(.subheadline)
+                }
+                if entry.isAvailable, entry.customStart != nil || entry.customEnd != nil {
+                    Text("\(entry.customStart ?? "--:--") - \(entry.customEnd ?? "--:--")")
+                        .foregroundStyle(.blue)
+                }
+                if let notes = entry.notes, !notes.isEmpty {
+                    Text(notes).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            if isSubmitted {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .accessibilityLabel("Ingediend")
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(background, in: RoundedRectangle(cornerRadius: 12))
+        .contentShape(Rectangle())
     }
 }
 
@@ -182,7 +263,7 @@ private struct EditAvailabilitySheet: View {
                     TextField("Opmerking", text: Binding(get: { entry.notes ?? "" }, set: { entry.notes = $0.isEmpty ? nil : $0 }), axis: .vertical)
                 }
             }
-            .navigationTitle("Beschikbaarheid \(entry.date)")
+            .navigationTitle(entry.date.dutchLongDate)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

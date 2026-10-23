@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ScheduleView: View {
     @EnvironmentObject private var vm: AppViewModel
-    @State private var mode: Mode = .list
+    @State private var mode: Mode = .calendar
     @State private var monthDate = Date()
 
     enum Mode: String, CaseIterable, Identifiable {
@@ -151,6 +151,7 @@ private struct ScheduleCard: View {
             }
         }
         .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(cardBackground, in: RoundedRectangle(cornerRadius: 12))
     }
 
@@ -280,7 +281,7 @@ private struct ScheduleCalendar: View {
                     ScheduleCard(item: item)
                         .listRowSeparator(.hidden)
                 }
-                .navigationTitle("Diensten op \(selectedDate)")
+                .navigationTitle("Diensten op \(selectedDate.dutchLongDate)")
                 .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Sluiten") { selected = [] } } }
             }
         }

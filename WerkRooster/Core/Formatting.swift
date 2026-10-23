@@ -46,6 +46,19 @@ extension String {
         }
         return self
     }
+
+    /// "2026-10-22" -> "Donderdag 22 oktober 2026"
+    var dutchLongDate: String {
+        let input = DateFormatter()
+        input.locale = Locale(identifier: "en_US_POSIX")
+        input.dateFormat = "yyyy-MM-dd"
+        guard let date = input.date(from: self) else { return self }
+        let output = DateFormatter()
+        output.locale = Locale(identifier: "nl_NL")
+        output.dateFormat = "EEEE d MMMM yyyy"
+        let text = output.string(from: date)
+        return text.prefix(1).uppercased() + text.dropFirst()
+    }
 }
 
 extension Date {
