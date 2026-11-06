@@ -481,9 +481,13 @@ struct SwapRequestItem: Codable, Identifiable, Hashable {
     let locationName: String?
     let requesterName: String?
     let requestedName: String?
+    let partStart: String?
+    let partEnd: String?
+    let isOpen: Int?
+    let adminNotes: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, scheduleId, reason, status, requestedAt, respondedAt, workDate, startTime, endTime, shiftName, locationId, locationName, requesterName, requestedName
+        case id, scheduleId, reason, status, requestedAt, respondedAt, workDate, startTime, endTime, shiftName, locationId, locationName, requesterName, requestedName, partStart, partEnd, isOpen, adminNotes
     }
 
     init(from decoder: Decoder) throws {
@@ -502,6 +506,10 @@ struct SwapRequestItem: Codable, Identifiable, Hashable {
         locationName = try container.decodeIfPresent(String.self, forKey: .locationName)
         requesterName = try container.decodeIfPresent(String.self, forKey: .requesterName)
         requestedName = try container.decodeIfPresent(String.self, forKey: .requestedName)
+        partStart = try container.decodeIfPresent(String.self, forKey: .partStart)
+        partEnd = try container.decodeIfPresent(String.self, forKey: .partEnd)
+        isOpen = try container.decodeFlexibleIntIfPresent(forKey: .isOpen)
+        adminNotes = try container.decodeIfPresent(String.self, forKey: .adminNotes)
     }
 }
 
@@ -531,6 +539,8 @@ struct RequestSwapBody: Codable {
     let scheduleId: Int
     let requestedEmployeeId: Int?
     let reason: String?
+    let partStart: String?
+    let partEnd: String?
 }
 
 struct RespondSwapBody: Codable {
@@ -609,4 +619,76 @@ struct TimeoffRequestBody: Codable {
     let endDate: String
     let type: String
     let reason: String?
+}
+
+// MARK: - Teamleider approvals
+
+struct ApprovalSwap: Codable, Identifiable, Hashable {
+    let id: Int
+    let status: String
+    let reason: String?
+    let partStart: String?
+    let partEnd: String?
+    let workDate: String?
+    let startTime: String?
+    let endTime: String?
+    let shiftName: String?
+    let locationName: String?
+    let requesterName: String?
+    let takerName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, status, reason, partStart, partEnd, workDate, startTime, endTime, shiftName, locationName, requesterName, takerName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeFlexibleInt(forKey: .id)
+        status = try container.decode(String.self, forKey: .status)
+        reason = try container.decodeIfPresent(String.self, forKey: .reason)
+        partStart = try container.decodeIfPresent(String.self, forKey: .partStart)
+        partEnd = try container.decodeIfPresent(String.self, forKey: .partEnd)
+        workDate = try container.decodeIfPresent(String.self, forKey: .workDate)
+        startTime = try container.decodeIfPresent(String.self, forKey: .startTime)
+        endTime = try container.decodeIfPresent(String.self, forKey: .endTime)
+        shiftName = try container.decodeIfPresent(String.self, forKey: .shiftName)
+        locationName = try container.decodeIfPresent(String.self, forKey: .locationName)
+        requesterName = try container.decodeIfPresent(String.self, forKey: .requesterName)
+        takerName = try container.decodeIfPresent(String.self, forKey: .takerName)
+    }
+}
+
+struct ApprovalTimeoff: Codable, Identifiable, Hashable {
+    let id: Int
+    let startDate: String
+    let endDate: String
+    let type: String
+    let reason: String?
+    let daysRequested: Int?
+    let employeeName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, startDate, endDate, type, reason, daysRequested, employeeName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeFlexibleInt(forKey: .id)
+        startDate = try container.decode(String.self, forKey: .startDate)
+        endDate = try container.decode(String.self, forKey: .endDate)
+        type = try container.decode(String.self, forKey: .type)
+        reason = try container.decodeIfPresent(String.self, forKey: .reason)
+        daysRequested = try container.decodeFlexibleIntIfPresent(forKey: .daysRequested)
+        employeeName = try container.decodeIfPresent(String.self, forKey: .employeeName)
+    }
+}
+
+struct ApprovalsResponse: Codable {
+    let swaps: [ApprovalSwap]
+    let timeoff: [ApprovalTimeoff]
+}
+
+struct DecisionBody: Codable {
+    let action: String
+    let notes: String?
 }

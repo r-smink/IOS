@@ -34,7 +34,7 @@ private struct MainShellView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Menu {
-                            ForEach(AppViewModel.Dest.allCases) { dest in
+                            ForEach(vm.visibleDestinations) { dest in
                                 Button(dest.title, systemImage: dest.symbol) {
                                     vm.destinationChanged(dest)
                                 }
@@ -80,6 +80,8 @@ private struct MainShellView: View {
             SickView()
         case .notifications:
             NotificationsView()
+        case .teamleader:
+            TeamleaderView()
         }
     }
 }

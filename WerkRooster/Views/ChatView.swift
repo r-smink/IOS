@@ -43,6 +43,16 @@ struct ChatView: View {
             .background(Color(.systemBackground))
         }
         .task { vm.ensureChatConnected() }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    vm.reloadChat()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .accessibilityLabel("Vernieuwen")
+            }
+        }
     }
 }
 

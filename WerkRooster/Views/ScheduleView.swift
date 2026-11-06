@@ -59,7 +59,12 @@ struct ScheduleView: View {
                 }
                 .listStyle(.plain)
             } else {
-                ScheduleCalendar(monthDate: monthDate, schedules: activeSchedules)
+                ScheduleCalendar(
+                    monthDate: monthDate,
+                    schedules: activeSchedules,
+                    showEmployees: vm.scheduleFilter == .full,
+                    currentEmployeeId: vm.currentEmployeeId
+                )
                 HStack(spacing: 10) {
                     ScheduleLegendDot(color: .blue, label: "Gepland")
                     ScheduleLegendDot(color: .green, label: "Voltooid")
@@ -126,7 +131,10 @@ private struct ScheduleCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(item.shiftName ?? "Dienst").font(.headline)
+            HStack(spacing: 6) {
+                LocationLogo(locationName: item.locationName, size: 22)
+                Text(item.shiftName ?? "Dienst").font(.headline)
+            }
             if let employee = item.employeeName, !employee.isEmpty {
                 Text(employee).font(.subheadline).fontWeight(.medium)
             }
@@ -201,6 +209,8 @@ private struct StatusBadge: View {
 private struct ScheduleCalendar: View {
     let monthDate: Date
     let schedules: [ScheduleItem]
+    let showEmployees: Bool
+    let currentEmployeeId: Int
     @State private var selected: [ScheduleItem] = []
     @State private var selectedDate = ""
 
@@ -277,14 +287,123 @@ private struct ScheduleCalendar: View {
             if !newValue { selected = [] }
         }), onDismiss: { selected = [] }) {
             NavigationStack {
-                List(selected) { item in
-                    ScheduleCard(item: item)
-                        .listRowSeparator(.hidden)
+                Group {
+                    if showEmployees {
+                        DayOverview(schedules: selected, currentEmployeeId: currentEmployeeId)
+                    } else {
+                        List(selected) { item in
+                            ScheduleCard(item: item)
+                                .listRowSeparator(.hidden)
+                        }
+                    }
                 }
-                .navigationTitle("Diensten op \(selectedDate.dutchLongDate)")
+                .navigationTitle(selectedDate.dutchLongDate)
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Sluiten") { selected = [] } } }
             }
+            .presentationDetents([.medium, .large])
         }
+    }
+}
+
+/// Compact "who works today" view: one section per shift, one line per employee.
+private struct DayOverview: View {
+    let schedules: [ScheduleItem]
+    let currentEmployeeId: Int
+
+    private struct ShiftGroup: Identifiable {
+        let id: String
+        let first: ScheduleItem
+        let items: [ScheduleItem]
+    }
+
+    private var groups: [ShiftGroup] {
+        let sorted = schedules.sorted {
+            let a = ($0.shiftStartTime ?? $0.startTime ?? "99", $0.shiftName ?? "", $0.employeeName ?? "")
+            let b = ($1.shiftStartTime ?? $1.startTime ?? "99", $1.shiftName ?? "", $1.employeeName ?? "")
+            return a < b
+        }
+        var order: [String] = []
+        var byKey: [String: [ScheduleItem]] = [:]
+        for item in sorted {
+            let key = "\(item.locationName ?? "")|\(item.shiftName ?? "")|\(item.shiftId ?? 0)"
+            if byKey[key] == nil { order.append(key) }
+            byKey[key, default: []].append(item)
+        }
+        return order.compactMap { key in
+            guard let items = byKey[key], let first = items.first else { return nil }
+            return ShiftGroup(id: key, first: first, items: items)
+        }
+    }
+
+    private var peopleCount: Int {
+        Set(schedules.compactMap(\.employeeId)).count
+    }
+
+    private func range(_ start: String?, _ end: String?) -> String {
+        guard let start, let end else { return "" }
+        return "\(start.hhmm)–\(end.hhmm)"
+    }
+
+    var body: some View {
+        List {
+            Text("\(peopleCount) \(peopleCount == 1 ? "medewerker" : "medewerkers") aan het werk")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .listRowBackground(Color.clear)
+
+            ForEach(groups) { group in
+                let shiftRange = range(group.first.shiftStartTime ?? group.first.startTime, group.first.shiftEndTime ?? group.first.endTime)
+                Section {
+                    ForEach(group.items) { item in
+                        let isMe = item.employeeId == currentEmployeeId
+                        let ownRange = range(item.startTime, item.endTime)
+                        HStack {
+                            Text((item.employeeName ?? "Onbekend") + (isMe ? " (jij)" : ""))
+                                .fontWeight(isMe ? .bold : .regular)
+                                .foregroundStyle(isMe ? Color.accentColor : Color.primary)
+                            Spacer()
+                            // Only show times when they differ from the shift's default
+                            if !ownRange.isEmpty && ownRange != shiftRange {
+                                Text(ownRange).font(.caption).foregroundStyle(.teal)
+                            }
+                        }
+                        .font(.subheadline)
+                    }
+                } header: {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color(hex: group.first.color) ?? .blue)
+                            .frame(width: 10, height: 10)
+                        LocationLogo(locationName: group.first.locationName, size: 18)
+                        Text(group.first.shiftName ?? "Dienst")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Text(shiftRange.isEmpty ? "Flexibel" : shiftRange)
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .textCase(nil)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .environment(\.defaultMinListRowHeight, 30)
+    }
+}
+
+private extension Color {
+    /// "#3b82f6" -> Color
+    init?(hex: String?) {
+        guard var value = hex?.trimmingCharacters(in: .whitespaces), !value.isEmpty else { return nil }
+        if value.hasPrefix("#") { value.removeFirst() }
+        guard value.count == 6, let rgb = UInt32(value, radix: 16) else { return nil }
+        self.init(
+            red: Double((rgb >> 16) & 0xFF) / 255,
+            green: Double((rgb >> 8) & 0xFF) / 255,
+            blue: Double(rgb & 0xFF) / 255
+        )
     }
 }
 

@@ -15,7 +15,7 @@ struct DashboardView: View {
                         .foregroundStyle(.secondary)
                 }
                 LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(AppViewModel.Dest.allCases.filter { $0 != .dashboard }) { dest in
+                    ForEach(vm.visibleDestinations.filter { $0 != .dashboard }) { dest in
                         Button {
                             vm.destinationChanged(dest)
                         } label: {

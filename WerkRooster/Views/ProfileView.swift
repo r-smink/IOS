@@ -15,14 +15,23 @@ struct ProfileView: View {
                         }
                     }
 
-                    if let ical = me.icalUrl, let url = URL(string: ical) {
+                    if let ical = me.icalUrl {
                         GroupBox("Agenda Synchronisatie") {
-                            Text("Voeg je rooster toe aan je agenda via deze persoonlijke iCal-link.")
+                            Text("Eén keer instellen: je rooster verschijnt daarna automatisch in de Agenda-app en blijft bijgewerkt.")
                                 .foregroundStyle(.secondary)
-                            HStack {
-                                Link(destination: url) {
-                                    Label("Openen", systemImage: "arrow.up.right.square")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            // webcal:// makes iOS offer "Abonneer" in the Agenda app instead of downloading a file
+                            if let webcal = URL(string: ical.replacingOccurrences(of: "^https?://", with: "webcal://", options: .regularExpression)) {
+                                Button {
+                                    UIApplication.shared.open(webcal)
+                                } label: {
+                                    Label("Toevoegen aan Agenda", systemImage: "calendar.badge.plus")
+                                        .frame(maxWidth: .infinity)
                                 }
+                                .buttonStyle(.borderedProminent)
+                                .padding(.top, 6)
+                            }
+                            HStack {
                                 Spacer()
                                 Button {
                                     UIPasteboard.general.string = ical

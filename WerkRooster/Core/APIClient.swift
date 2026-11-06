@@ -163,6 +163,20 @@ final class APIClient {
         try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/schedules/\(scheduleId)/toggle-swappable", method: "POST", token: token)
     }
 
+    // MARK: - Teamleider approvals
+
+    func approvals(baseUrl: String, token: String?) async throws -> ApprovalsResponse {
+        try await request(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/approvals", method: "GET", token: token)
+    }
+
+    func decideSwap(baseUrl: String, token: String?, swapId: Int, body: DecisionBody) async throws {
+        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/approvals/swaps/\(swapId)", method: "POST", token: token, body: body)
+    }
+
+    func decideTimeoff(baseUrl: String, token: String?, timeoffId: Int, body: DecisionBody) async throws {
+        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/approvals/timeoff/\(timeoffId)", method: "POST", token: token, body: body)
+    }
+
     // MARK: - Time off (verlof)
 
     func timeoff(baseUrl: String, token: String?) async throws -> TimeoffResponse {

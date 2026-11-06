@@ -14,7 +14,12 @@ struct SwapView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                // Incoming requests
+                Text("Elke ruil moet worden goedgekeurd door een teamleider. Je krijgt een melding zodra dat is gebeurd.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Incoming requests and open offers
                 if !vm.swapIncoming.isEmpty {
                     section(title: "📬 Ruilverzoeken voor jou (\(vm.swapIncoming.count))") {
                         ForEach(vm.swapIncoming) { req in
@@ -64,10 +69,11 @@ struct SwapView: View {
             }
             .padding(.horizontal)
         }
+        .refreshable { await vm.loadSwapData() }
         .task { await vm.loadSwapData() }
         .sheet(item: $showRequestDialog) { shift in
-            RequestSwapSheet(shift: shift, colleagues: vm.swapColleagues) { colleagueId, reason in
-                Task { await vm.requestSwap(scheduleId: shift.id, colleagueId: colleagueId, reason: reason) }
+            RequestSwapSheet(shift: shift, colleagues: vm.swapColleagues) { colleagueId, reason, partStart, partEnd in
+                Task { await vm.requestSwap(scheduleId: shift.id, colleagueId: colleagueId, reason: reason, partStart: partStart, partEnd: partEnd) }
             }
         }
     }
@@ -83,6 +89,18 @@ struct SwapView: View {
     }
 }
 
+private struct ShiftTitle: View {
+    let shiftName: String?
+    let locationName: String?
+
+    var body: some View {
+        HStack(spacing: 6) {
+            LocationLogo(locationName: locationName, size: 20)
+            Text(shiftName ?? "Dienst").font(.subheadline.bold())
+        }
+    }
+}
+
 private struct MyShiftCard: View {
     let shift: SwapShift
     let onToggle: () -> Void
@@ -90,10 +108,10 @@ private struct MyShiftCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(shift.shiftName ?? "Dienst").font(.subheadline.bold())
-            Text("\(shift.workDate)  \(shift.locationName ?? "")").font(.caption).foregroundStyle(.secondary)
+            ShiftTitle(shiftName: shift.shiftName, locationName: shift.locationName)
+            Text("\(shift.workDate.dutchLongDate)  \(shift.locationName ?? "")").font(.caption).foregroundStyle(.secondary)
             if let s = shift.startTime, let e = shift.endTime {
-                Text("\(s) – \(e)").font(.caption).foregroundStyle(.blue)
+                Text("\(s.hhmm) – \(e.hhmm)").font(.caption).foregroundStyle(.blue)
             }
             HStack(spacing: 8) {
                 Button(action: onRequest) {
@@ -120,16 +138,16 @@ private struct AvailableShiftCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(shift.shiftName ?? "Dienst").font(.subheadline.bold())
-            Text("\(shift.workDate)  \(shift.locationName ?? "")").font(.caption).foregroundStyle(.secondary)
+            ShiftTitle(shiftName: shift.shiftName, locationName: shift.locationName)
+            Text("\(shift.workDate.dutchLongDate)  \(shift.locationName ?? "")").font(.caption).foregroundStyle(.secondary)
             if let s = shift.startTime, let e = shift.endTime {
-                Text("\(s) – \(e)").font(.caption).foregroundStyle(.blue)
+                Text("\(s.hhmm) – \(e.hhmm)").font(.caption).foregroundStyle(.blue)
             }
             if let owner = shift.ownerName {
                 Text("Van: \(owner)").font(.caption)
             }
             Button(action: onClaim) {
-                Text("Dienst overnemen").frame(maxWidth: .infinity)
+                Text("Overnemen aanvragen").frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
         }
@@ -143,24 +161,35 @@ private struct IncomingRequestCard: View {
     let onAccept: () -> Void
     let onReject: () -> Void
 
+    private var isOpen: Bool { request.isOpen == 1 }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(request.shiftName ?? "Dienst").font(.subheadline.bold())
-            Text("\(request.workDate ?? "")  \(request.locationName ?? "")").font(.caption).foregroundStyle(.secondary)
-            if let r = request.requesterName { Text("Van: \(r)").font(.caption) }
+            ShiftTitle(shiftName: request.shiftName, locationName: request.locationName)
+            Text("\(request.workDate?.dutchLongDate ?? "")  \(request.locationName ?? "")").font(.caption).foregroundStyle(.secondary)
+            if let ps = request.partStart, let pe = request.partEnd {
+                Text("Deel van de dienst: \(ps.hhmm) – \(pe.hhmm)").font(.caption.bold()).foregroundStyle(.teal)
+            } else if let s = request.startTime, let e = request.endTime {
+                Text("\(s.hhmm) – \(e.hhmm)").font(.caption).foregroundStyle(.blue)
+            }
+            if let r = request.requesterName {
+                Text(isOpen ? "Aangeboden door: \(r) (open aanbod)" : "Van: \(r)").font(.caption)
+            }
             if let reason = request.reason, !reason.isEmpty {
                 Text("Reden: \(reason)").font(.caption).foregroundStyle(.secondary)
             }
             HStack(spacing: 8) {
                 Button(action: onAccept) {
-                    Text("Accepteren").frame(maxWidth: .infinity)
+                    Text(isOpen ? "Ik neem het over" : "Accepteren").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
 
-                Button(role: .destructive, action: onReject) {
-                    Text("Weigeren").frame(maxWidth: .infinity)
+                if !isOpen {
+                    Button(role: .destructive, action: onReject) {
+                        Text("Weigeren").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
             }
         }
         .padding(12)
@@ -173,8 +202,9 @@ private struct MyRequestCard: View {
 
     var statusText: String {
         switch request.status {
-        case "pending": return "⏳ In behandeling"
-        case "approved", "completed": return "✓ Voltooid"
+        case "pending": return request.requestedName == nil ? "⏳ Open aanbod, wacht op collega" : "⏳ Wacht op reactie collega"
+        case "accepted": return "⏳ Wacht op goedkeuring teamleider"
+        case "approved", "completed": return "✓ Goedgekeurd"
         case "rejected": return "✗ Afgewezen"
         default: return request.status
         }
@@ -182,12 +212,22 @@ private struct MyRequestCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(request.shiftName ?? "Dienst").font(.subheadline)
-            Text("\(request.workDate ?? "") - \(statusText)").font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 6) {
+                LocationLogo(locationName: request.locationName, size: 18)
+                Text(request.shiftName ?? "Dienst").font(.subheadline)
+            }
+            Text("\(request.workDate?.dutchLongDate ?? "") - \(statusText)").font(.caption).foregroundStyle(.secondary)
+            if let ps = request.partStart, let pe = request.partEnd {
+                Text("Deel: \(ps.hhmm) – \(pe.hhmm)").font(.caption).foregroundStyle(.secondary)
+            }
             if let name = request.requestedName {
-                Text("Gevraagd aan: \(name)").font(.caption).foregroundStyle(.secondary)
+                Text("Collega: \(name)").font(.caption).foregroundStyle(.secondary)
+            }
+            if let notes = request.adminNotes, !notes.isEmpty {
+                Text("Teamleider: \(notes)").font(.caption).foregroundStyle(.secondary)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
     }
@@ -197,39 +237,97 @@ private struct RequestSwapSheet: View {
     @Environment(\.dismiss) private var dismiss
     let shift: SwapShift
     let colleagues: [Colleague]
-    let onSubmit: (Int?, String?) -> Void
+    let onSubmit: (_ colleagueId: Int?, _ reason: String?, _ partStart: String?, _ partEnd: String?) -> Void
 
-    @State private var selectedColleague: Colleague?
+    @State private var selectedColleagueId: Int?
     @State private var reason: String = ""
+    @State private var partial = false
+    @State private var partStart = Date()
+    @State private var partEnd = Date()
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+
+    private var shiftStart: Date? { shift.startTime.flatMap { Self.timeFormatter.date(from: $0.hhmm) } }
+    private var shiftEnd: Date? { shift.endTime.flatMap { Self.timeFormatter.date(from: $0.hhmm) } }
+
+    /// Partial swaps are only possible for shifts with fixed, same-day times.
+    private var canSplit: Bool {
+        guard let s = shiftStart, let e = shiftEnd else { return false }
+        return e > s
+    }
+
+    private var partValid: Bool {
+        !partial || partEnd > partStart
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Text("\(shift.shiftName ?? "Dienst") op \(shift.workDate)")
-                }
-                Section("Specifieke collega (optioneel)") {
-                    Picker("Collega", selection: $selectedColleague) {
-                        Text("Iedereen mag reageren").tag(Colleague?.none)
-                        ForEach(colleagues) { c in
-                            Text(c.name).tag(Colleague?.some(c))
-                        }
+                    HStack(spacing: 6) {
+                        LocationLogo(locationName: shift.locationName, size: 22)
+                        Text("\(shift.shiftName ?? "Dienst") op \(shift.workDate.dutchLongDate)")
                     }
                 }
+
+                if canSplit, let s = shiftStart, let e = shiftEnd {
+                    Section {
+                        Toggle("Alleen een deel van de dienst", isOn: $partial)
+                        if partial {
+                            DatePicker("Van", selection: $partStart, in: s...e, displayedComponents: .hourAndMinute)
+                            DatePicker("Tot", selection: $partEnd, in: s...e, displayedComponents: .hourAndMinute)
+                            if !partValid {
+                                Text("De eindtijd moet na de begintijd liggen.")
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                            }
+                        }
+                    } footer: {
+                        Text("Dienst: \(Self.timeFormatter.string(from: s)) – \(Self.timeFormatter.string(from: e))")
+                    }
+                }
+
+                Section("Aan wie?") {
+                    Picker("Collega", selection: $selectedColleagueId) {
+                        Text("Iedereen op de locatie (open aanbod)").tag(Int?.none)
+                        ForEach(colleagues) { c in
+                            Text(c.name).tag(Int?.some(c.id))
+                        }
+                    }
+                    // Opens a full, scrollable list instead of a compact menu
+                    .pickerStyle(.navigationLink)
+                }
+
                 Section("Reden (optioneel)") {
                     TextField("Reden", text: $reason, axis: .vertical)
                 }
             }
             .navigationTitle("Dienst ruilen")
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                if let s = shiftStart { partStart = s }
+                if let e = shiftEnd { partEnd = e }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuleren") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Indienen") {
-                        onSubmit(selectedColleague?.id, reason.isEmpty ? nil : reason)
+                        onSubmit(
+                            selectedColleagueId,
+                            reason.isEmpty ? nil : reason,
+                            partial ? Self.timeFormatter.string(from: partStart) : nil,
+                            partial ? Self.timeFormatter.string(from: partEnd) : nil
+                        )
                         dismiss()
                     }
+                    .disabled(!partValid)
                 }
             }
         }

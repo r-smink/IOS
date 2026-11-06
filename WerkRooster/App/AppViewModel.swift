@@ -20,6 +20,7 @@ final class AppViewModel: ObservableObject {
         case chat
         case sick
         case notifications
+        case teamleader
 
         var id: String { rawValue }
 
@@ -34,6 +35,7 @@ final class AppViewModel: ObservableObject {
             case .chat: return "Chat"
             case .sick: return "Ziek melden"
             case .notifications: return "Meldingen"
+            case .teamleader: return "Teamleider"
             }
         }
 
@@ -48,6 +50,7 @@ final class AppViewModel: ObservableObject {
             case .chat: return "bubble.left.and.bubble.right"
             case .sick: return "cross.case"
             case .notifications: return "bell"
+            case .teamleader: return "checkmark.seal"
             }
         }
     }
@@ -78,6 +81,8 @@ final class AppViewModel: ObservableObject {
     @Published var swapStatus: String?
     @Published var timeoffItems: [TimeoffItem] = []
     @Published var timeoffStatus: String?
+    @Published var approvals: ApprovalsResponse?
+    @Published var approvalsStatus: String?
 
     private let storage = Storage()
     private let api = APIClient()
@@ -99,6 +104,20 @@ final class AppViewModel: ObservableObject {
 
     var currentUserId: Int {
         me?.user?.id ?? 0
+    }
+
+    var currentEmployeeId: Int {
+        me?.employee?.id ?? 0
+    }
+
+    /// Teamleiders (employees with is_admin) review swap and time-off requests.
+    var isTeamleader: Bool {
+        me?.employee?.isAdmin ?? false
+    }
+
+    /// Menu destinations for the current user; the teamleider screen is only for teamleiders.
+    var visibleDestinations: [Dest] {
+        Dest.allCases.filter { $0 != .teamleader || isTeamleader }
     }
 
     func bootstrap() async {
@@ -360,6 +379,14 @@ final class AppViewModel: ObservableObject {
         }
     }
 
+    /// Drops the current chat connection and loads the latest messages again.
+    func reloadChat() {
+        chatTask?.cancel()
+        chatTask = nil
+        chatMessages = []
+        ensureChatConnected()
+    }
+
     func destinationChanged(_ dest: Dest) {
         currentDest = dest
         if dest == .chat {
@@ -383,6 +410,10 @@ final class AppViewModel: ObservableObject {
 
         if dest == .timeoff {
             Task { await loadTimeoff() }
+        }
+
+        if dest == .teamleader {
+            Task { await loadApprovals() }
         }
     }
 
@@ -428,6 +459,12 @@ final class AppViewModel: ObservableObject {
             destinationChanged(.chat)
         case "availability":
             destinationChanged(.availability)
+        case "approval_needed":
+            destinationChanged(isTeamleader ? .teamleader : .notifications)
+        case "swap_request", "swap_response", "swap_decision", "swap_claimed_self", "swap_claimed_other", "replacement_needed":
+            destinationChanged(.swaps)
+        case "timeoff", "timeoff_decision":
+            destinationChanged(.timeoff)
         default:
             destinationChanged(.notifications)
         }
@@ -547,16 +584,17 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    func requestSwap(scheduleId: Int, colleagueId: Int?, reason: String?) async {
+    func requestSwap(scheduleId: Int, colleagueId: Int?, reason: String?, partStart: String? = nil, partEnd: String? = nil) async {
         guard let config else { return }
         do {
+            let body = RequestSwapBody(scheduleId: scheduleId, requestedEmployeeId: colleagueId, reason: reason, partStart: partStart, partEnd: partEnd)
             _ = try await authorized {
-                try await api.requestSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, body: RequestSwapBody(scheduleId: scheduleId, requestedEmployeeId: colleagueId, reason: reason))
+                try await api.requestSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, body: body)
             } as Void
-            swapStatus = "Ruilverzoek ingediend"
             await loadSwapData()
+            swapStatus = colleagueId == nil ? "Dienst aangeboden aan je collega's" : "Ruilverzoek verstuurd"
         } catch {
-            swapStatus = "Ruilverzoek indienen mislukt"
+            swapStatus = error.localizedDescription
         }
     }
 
@@ -566,10 +604,10 @@ final class AppViewModel: ObservableObject {
             _ = try await authorized {
                 try await api.respondSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, swapId: swapId, action: action)
             } as Void
-            swapStatus = action == "accept" ? "Verzoek geaccepteerd" : "Verzoek afgewezen"
             await loadSwapData()
+            swapStatus = action == "accept" ? "Geaccepteerd, wacht op goedkeuring van de teamleider" : "Verzoek afgewezen"
         } catch {
-            swapStatus = "Kon niet reageren op verzoek"
+            swapStatus = error.localizedDescription
         }
     }
 
@@ -579,11 +617,50 @@ final class AppViewModel: ObservableObject {
             _ = try await authorized {
                 try await api.claimSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, scheduleId: scheduleId)
             } as Void
-            swapStatus = "Dienst overgenomen"
             await loadSwapData()
+            swapStatus = "Aangevraagd, wacht op goedkeuring van de teamleider"
         } catch {
-            swapStatus = "Dienst overnemen mislukt"
+            swapStatus = error.localizedDescription
         }
+    }
+
+    // MARK: - Teamleider approvals
+
+    func loadApprovals() async {
+        guard let config, isTeamleader else { return }
+        do {
+            approvals = try await authorized {
+                try await api.approvals(baseUrl: config.baseUrl, token: self.config?.accessToken)
+            }
+        } catch {
+            approvalsStatus = error.localizedDescription
+        }
+    }
+
+    func decideSwap(id: Int, approve: Bool, notes: String?) async {
+        guard let config else { return }
+        do {
+            _ = try await authorized {
+                try await api.decideSwap(baseUrl: config.baseUrl, token: self.config?.accessToken, swapId: id, body: DecisionBody(action: approve ? "approve" : "reject", notes: notes))
+            } as Void
+            approvalsStatus = approve ? "Ruil goedgekeurd, het rooster is bijgewerkt" : "Ruilverzoek afgewezen"
+        } catch {
+            approvalsStatus = error.localizedDescription
+        }
+        await loadApprovals()
+    }
+
+    func decideTimeoff(id: Int, approve: Bool, notes: String?) async {
+        guard let config else { return }
+        do {
+            _ = try await authorized {
+                try await api.decideTimeoff(baseUrl: config.baseUrl, token: self.config?.accessToken, timeoffId: id, body: DecisionBody(action: approve ? "approve" : "reject", notes: notes))
+            } as Void
+            approvalsStatus = approve ? "Verlof goedgekeurd" : "Verlof afgewezen"
+        } catch {
+            approvalsStatus = error.localizedDescription
+        }
+        await loadApprovals()
     }
 
     // MARK: - Time off (verlof)
@@ -632,6 +709,8 @@ final class AppViewModel: ObservableObject {
         swapStatus = nil
         timeoffItems = []
         timeoffStatus = nil
+        approvals = nil
+        approvalsStatus = nil
         storage.clear()
         error = nil
         loading = false
