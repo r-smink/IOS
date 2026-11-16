@@ -68,7 +68,13 @@ struct AvailabilityView: View {
                         } label: {
                             VStack(spacing: 3) {
                                 Text("\(day)").font(.caption.bold())
-                                if entry.shiftPreference != nil {
+                                if entry.isAvailable, hasCustomTime(entry) {
+                                    // Own time window (e.g. "09-17"), also when no shift is chosen
+                                    Text("\(String((entry.customStart ?? "--").prefix(2)))-\(String((entry.customEnd ?? "--").prefix(2)))")
+                                        .font(.system(size: 8, weight: .semibold))
+                                        .lineLimit(1)
+                                        .foregroundStyle(.blue)
+                                } else if entry.shiftPreference != nil {
                                     Circle().fill(Color.blue).frame(width: 4, height: 4)
                                 } else if isSubmitted {
                                     Image(systemName: "checkmark")
@@ -139,6 +145,10 @@ struct AvailabilityView: View {
         }
     }
 
+    private func hasCustomTime(_ entry: AvailabilityEntryRequest) -> Bool {
+        !(entry.customStart ?? "").isEmpty || !(entry.customEnd ?? "").isEmpty
+    }
+
     private func shiftName(for entry: AvailabilityEntryRequest) -> String? {
         guard let id = entry.shiftPreference else { return nil }
         return vm.shifts.first { $0.id == id }?.name
@@ -148,7 +158,7 @@ struct AvailabilityView: View {
         if !entry.isAvailable {
             return isSubmitted ? Color.red.opacity(0.3) : Color.red.opacity(0.12)
         }
-        if entry.shiftPreference != nil {
+        if entry.shiftPreference != nil || hasCustomTime(entry) {
             return Color.green.opacity(0.35)
         }
         if isSubmitted {

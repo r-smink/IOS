@@ -257,8 +257,9 @@ final class AppViewModel: ObservableObject {
                     date: item.workDate,
                     isAvailable: item.isAvailable == 1,
                     shiftPreference: item.shiftPreference,
-                    customStart: item.customStart,
-                    customEnd: item.customEnd,
+                    // Server sends "HH:MM:SS"; the app works with "HH:MM"
+                    customStart: Self.hhmm(item.customStart),
+                    customEnd: Self.hhmm(item.customEnd),
                     notes: item.notes
                 )
                 if let submittedAt = item.submittedAt, !submittedAt.isEmpty {
@@ -721,6 +722,12 @@ final class AppViewModel: ObservableObject {
             chatMessages.append(message)
             chatMessages.sort { $0.id < $1.id }
         }
+    }
+
+    /// "09:00:00" -> "09:00"; empty -> nil
+    private static func hhmm(_ time: String?) -> String? {
+        guard let time, !time.isEmpty else { return nil }
+        return String(time.prefix(5))
     }
 
     private func buildMonthDefaults(monthString: String) -> [String: AvailabilityEntryRequest] {
