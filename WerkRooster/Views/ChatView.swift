@@ -9,7 +9,12 @@ struct ChatView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 8) {
-                        ForEach(vm.chatMessages) { message in
+                        ForEach(Array(vm.chatMessages.enumerated()), id: \.element.id) { index, message in
+                            let day = message.createdAt.chatDay
+                            let previousDay = index > 0 ? vm.chatMessages[index - 1].createdAt.chatDay : nil
+                            if let day, day != previousDay {
+                                ChatDateHeader(label: day.chatDayLabel)
+                            }
                             ChatBubble(message: message, isMe: message.senderId == vm.currentUserId)
                                 .id(message.id)
                         }
@@ -94,7 +99,45 @@ private struct ChatBubble: View {
     }
 }
 
+private struct ChatDateHeader: View {
+    let label: String
+
+    var body: some View {
+        Text(label)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Color(.tertiarySystemFill), in: Capsule())
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
+    }
+}
+
+private extension Date {
+    /// "Vandaag", "Gisteren", "ma 16 nov" (dit jaar) of "ma 16 nov 2025" (ander jaar).
+    var chatDayLabel: String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(self) { return "Vandaag" }
+        if calendar.isDateInYesterday(self) { return "Gisteren" }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "nl_NL")
+        let sameYear = calendar.component(.year, from: self) == calendar.component(.year, from: Date())
+        formatter.dateFormat = sameYear ? "EEE d MMM" : "EEE d MMM yyyy"
+        return formatter.string(from: self).replacingOccurrences(of: ".", with: "")
+    }
+}
+
 private extension String {
+    /// Begin van de dag van een WP-tijdstempel (yyyy-MM-dd ...), of nil als die niet te lezen is.
+    var chatDay: Date? {
+        let input = DateFormatter()
+        input.locale = Locale(identifier: "en_US_POSIX")
+        input.dateFormat = "yyyy-MM-dd"
+        guard let date = input.date(from: String(prefix(10))) else { return nil }
+        return Calendar.current.startOfDay(for: date)
+    }
+
     var chatTime: String {
         let input = DateFormatter()
         input.dateFormat = "yyyy-MM-dd HH:mm:ss"

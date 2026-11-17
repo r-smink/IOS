@@ -187,6 +187,10 @@ final class APIClient {
         _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/timeoff", method: "POST", token: token, body: body)
     }
 
+    func withdrawTimeoff(baseUrl: String, token: String?, timeoffId: Int) async throws {
+        _ = try await requestEmpty(baseUrl: baseUrl, path: "wp-json/roosterplanner/v1/timeoff/\(timeoffId)", method: "DELETE", token: token, body: Optional<String>.none)
+    }
+
     func chatHistory(baseUrl: String, token: String?, lastId: Int? = nil) async throws -> [ChatMessage] {
         var query: [URLQueryItem] = [URLQueryItem(name: "limit", value: "50")]
         if let lastId {

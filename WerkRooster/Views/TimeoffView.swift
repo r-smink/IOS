@@ -7,6 +7,7 @@ struct TimeoffView: View {
     @State private var endDate = Date()
     @State private var selectedType = "vacation"
     @State private var reason = ""
+    @State private var withdrawTarget: TimeoffItem?
 
     private let typeOptions: [(String, String)] = [
         ("vacation", "Vakantie"),
@@ -19,7 +20,8 @@ struct TimeoffView: View {
         let start = startDate.isoDate
         let end = endDate.isoDate
         return vm.timeoffItems.contains {
-            $0.startDate == start && $0.endDate == end && $0.status != "rejected"
+            $0.startDate == start && $0.endDate == end &&
+                $0.status != "rejected" && !TimeoffItem.withdrawnStatuses.contains($0.status)
         }
     }
 
@@ -82,7 +84,9 @@ struct TimeoffView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(vm.timeoffItems) { item in
-                            TimeoffCard(item: item)
+                            TimeoffCard(item: item, withdrawDisabled: vm.loading) {
+                                withdrawTarget = item
+                            }
                         }
                     }
                 }
@@ -90,17 +94,52 @@ struct TimeoffView: View {
             .padding(.horizontal)
         }
         .task { await vm.loadTimeoff() }
+        .confirmationDialog(
+            "Verlofaanvraag intrekken?",
+            isPresented: Binding(
+                get: { withdrawTarget != nil },
+                set: { if !$0 { withdrawTarget = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: withdrawTarget
+        ) { item in
+            Button("Intrekken", role: .destructive) {
+                Task { await vm.withdrawTimeoff(id: item.id) }
+            }
+            Button("Annuleren", role: .cancel) {}
+        } message: { item in
+            Text("Weet je zeker dat je je verlofaanvraag van \(TimeoffCard.formatDate(item.startDate)) t/m \(TimeoffCard.formatDate(item.endDate)) wilt intrekken?")
+        }
+    }
+}
+
+extension TimeoffItem {
+    static let withdrawnStatuses: Set<String> = ["withdrawn", "cancelled", "canceled"]
+
+    /// Intrekbaar zolang de aanvraag in behandeling is, of goedgekeurd en nog niet begonnen.
+    var canWithdraw: Bool {
+        switch status {
+        case "pending":
+            return true
+        case "approved":
+            return startDate > Date().isoDate
+        default:
+            return false
+        }
     }
 }
 
 private struct TimeoffCard: View {
     let item: TimeoffItem
+    let withdrawDisabled: Bool
+    let onWithdraw: () -> Void
 
     var statusText: String {
         switch item.status {
         case "pending": return "⏳ In behandeling"
         case "approved": return "✅ Goedgekeurd"
         case "rejected": return "❌ Afgekeurd"
+        case _ where TimeoffItem.withdrawnStatuses.contains(item.status): return "↩️ Ingetrokken"
         default: return item.status
         }
     }
@@ -131,7 +170,7 @@ private struct TimeoffCard: View {
                 Spacer()
                 Text(statusText).font(.caption)
             }
-            Text("\(formatDate(item.startDate)) t/m \(formatDate(item.endDate)) (\(item.daysRequested ?? 0) dagen)")
+            Text("\(Self.formatDate(item.startDate)) t/m \(Self.formatDate(item.endDate)) (\(item.daysRequested ?? 0) dagen)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             if let reason = item.reason, !reason.isEmpty {
@@ -141,16 +180,25 @@ private struct TimeoffCard: View {
                 Text("Reactie planner: \(notes)").font(.caption).foregroundStyle(.secondary)
             }
             if let requested = item.requestedAt {
-                Text("Aangevraagd: \(formatDate(String(requested.prefix(10))))")
+                Text("Aangevraagd: \(Self.formatDate(String(requested.prefix(10))))")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
+            if item.canWithdraw {
+                HStack {
+                    Spacer()
+                    Button("Aanvraag intrekken", role: .destructive, action: onWithdraw)
+                        .font(.caption.bold())
+                        .disabled(withdrawDisabled)
+                }
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(statusColor, in: RoundedRectangle(cornerRadius: 8))
     }
 
-    private func formatDate(_ iso: String) -> String {
+    static func formatDate(_ iso: String) -> String {
         let input = DateFormatter()
         input.dateFormat = "yyyy-MM-dd"
         let output = DateFormatter()

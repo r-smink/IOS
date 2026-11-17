@@ -692,6 +692,21 @@ final class AppViewModel: ObservableObject {
         }
     }
 
+    func withdrawTimeoff(id: Int) async {
+        guard let config else { return }
+        loading = true
+        defer { loading = false }
+        do {
+            _ = try await authorized {
+                try await api.withdrawTimeoff(baseUrl: config.baseUrl, token: self.config?.accessToken, timeoffId: id)
+            } as Void
+            await loadTimeoff()
+            timeoffStatus = "Verlofaanvraag ingetrokken"
+        } catch {
+            timeoffStatus = "Intrekken mislukt"
+        }
+    }
+
     private func clearSession() {
         config = nil
         me = nil
